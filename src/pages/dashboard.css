@@ -1,0 +1,201 @@
+/*
+  SGS Learning Registry dashboard — reskinned to the marketing landing's
+  identity: warm light paper, copper accent, Zodiak display + Switzer body,
+  soft rounded surfaces. Everything is scoped to `.sgs-registry` so the
+  dashboard's token names (which reuse --color-paper / --color-ink etc. with
+  different values) never leak into the landing on `/`.
+
+  The dashboard reads almost everything through these CSS variables, so
+  remapping them here re-skins the whole cockpit without touching its markup.
+*/
+
+.sgs-registry {
+  /* Accent = landing copper (logo crosshair stays SGS orange, set in Wordmark) */
+  --color-sgs: oklch(0.58 0.13 45);
+  --color-sgs-bright: oklch(0.64 0.145 48);
+  --color-sgs-deep: oklch(0.42 0.11 45);
+  --color-sgs-ink: oklch(0.42 0.11 45);
+  --color-sgs-wash: oklch(0.93 0.04 60);
+
+  /* Warm light surfaces */
+  --color-paper: oklch(0.992 0.006 85);   /* cards — lifts above page  */
+  --color-paper-2: oklch(0.963 0.013 85); /* page background           */
+  --color-paper-3: oklch(0.925 0.022 80); /* hover / chart tracks      */
+
+  --color-ink: oklch(0.245 0.02 55);      /* primary text              */
+  --color-ink-2: oklch(0.42 0.018 55);
+  --color-ink-3: oklch(0.56 0.016 58);
+  --color-ink-4: oklch(0.72 0.012 62);
+
+  --color-rule: oklch(0.86 0.012 75);
+  --color-rule-soft: oklch(0.905 0.01 80);
+
+  --color-overlay: oklch(0.245 0.02 55);  /* tooltips: warm dark ink   */
+
+  /* Material & depth — warm, multi-layer, low-opacity shadows tinted toward
+     ink (never neutral grey). This is what reads as "premium / Apple": the
+     surface floats on a soft contact shadow plus a wider ambient one, with a
+     hairline ring. Motion eases on an exponential out-curve. */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --shadow-1:
+    0 1px 1.5px oklch(0.24 0.02 55 / 0.04),
+    0 3px 8px -3px oklch(0.24 0.02 55 / 0.06);
+  --shadow-2:
+    0 1px 2px oklch(0.24 0.02 55 / 0.05),
+    0 10px 24px -8px oklch(0.24 0.02 55 / 0.10),
+    0 24px 48px -24px oklch(0.24 0.02 55 / 0.10);
+  --ring-top: inset 0 1px 0 oklch(1 0 0 / 0.6);  /* top-edge light catch */
+
+  --font-sans: "Switzer", system-ui, -apple-system, sans-serif;
+  --font-display: "Zodiak", Georgia, "Times New Roman", serif;
+  --font-mono: "Switzer", system-ui, sans-serif;
+  --font-arabic: "Noto Naskh Arabic", "Segoe UI Arabic", serif;
+
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Dark mode: a warm "night" version of the same identity. */
+.sgs-registry[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-paper: oklch(0.255 0.016 55);
+  --color-paper-2: oklch(0.2 0.014 55);
+  --color-paper-3: oklch(0.32 0.016 52);
+
+  --color-ink: oklch(0.955 0.01 85);
+  --color-ink-2: oklch(0.8 0.012 70);
+  --color-ink-3: oklch(0.63 0.012 62);
+  --color-ink-4: oklch(0.48 0.012 58);
+
+  --color-rule: oklch(0.42 0.014 55);
+  --color-rule-soft: oklch(0.32 0.014 55);
+
+  --color-sgs-ink: oklch(0.72 0.13 50);
+  --color-overlay: oklch(0.3 0.016 52);
+
+  /* On dark, ambient shadows vanish — depth comes from deeper cast shadows and
+     a faint top highlight that reads as a beveled edge catching light. */
+  --shadow-1:
+    0 1px 1.5px oklch(0 0 0 / 0.30),
+    0 4px 12px -4px oklch(0 0 0 / 0.40);
+  --shadow-2:
+    0 2px 6px oklch(0 0 0 / 0.35),
+    0 16px 40px -12px oklch(0 0 0 / 0.55);
+  --ring-top: inset 0 1px 0 oklch(1 0 0 / 0.05);
+
+  color: var(--color-ink);
+}
+
+.sgs-registry[data-theme="dark"],
+.sgs-registry[data-theme="dark"] * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Soft, rounded surfaces to match the landing (was sharp 2–3px). */
+.sgs-registry .rounded-\[1px\] { border-radius: 0.3rem; }
+.sgs-registry .rounded-\[2px\] { border-radius: 0.7rem; }
+.sgs-registry .rounded-\[3px\] { border-radius: 1.25rem; }
+
+/* Premium material — every panel and KPI floats on warm layered shadow with a
+   hairline ring and a top light-catch. The single biggest lift from "flat
+   cockpit" to "Apple-grade product surface". */
+.sgs-registry .surface {
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule-soft);
+  box-shadow: var(--shadow-1), var(--ring-top);
+  transition:
+    box-shadow 0.45s var(--ease),
+    border-color 0.45s var(--ease),
+    translate 0.45s var(--ease);
+}
+/* Interactive surfaces lift toward the pointer on a long exponential ease.
+   Uses the independent `translate` property (not `transform`) so it composes
+   with Motion's inline transform and stays on the compositor at 60fps. */
+.sgs-registry .surface-hover {
+  will-change: translate;
+}
+.sgs-registry .surface-hover:hover {
+  border-color: var(--color-rule);
+  box-shadow: var(--shadow-2), var(--ring-top);
+  translate: 0 -3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sgs-registry .surface-hover:hover { translate: none; }
+}
+
+/* Type utilities — read the registry's font vars.
+   The landing carries its identity in Zodiak: big bold display lines, tracked
+   tight, with a single copper italic accent word. These utilities bring that
+   exact voice into the cockpit so the two surfaces read as one product. */
+.sgs-registry .tabular { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+/* Editorial display — page, section and panel headings. Matches the landing
+   hero: Zodiak 700, optically tightened, near-solid leading. */
+.sgs-registry .display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  line-height: 1.06;
+}
+/* Zodiak for focal numerals (gauge / donut / map). Lighter than display so
+   large figures stay elegant rather than blunt. */
+.sgs-registry .serif { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.02em; }
+/* The accent word inside a display line — copper, italic, with real weight. */
+.sgs-registry .serif-italic { font-family: var(--font-display); font-style: italic; font-weight: 600; letter-spacing: -0.012em; }
+.sgs-registry .mono { font-family: var(--font-mono); }
+.sgs-registry .arabic { font-family: var(--font-arabic); direction: rtl; unicode-bidi: isolate; }
+.sgs-registry .tighten { letter-spacing: -0.02em; }
+.sgs-registry .tightenx { letter-spacing: -0.028em; }
+
+/* Eyebrow — the landing's signature: a small copper dot + tracked caps in
+   Switzer 500. One vocabulary for every section label. */
+.sgs-registry .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.sgs-registry .eyebrow::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--color-sgs);
+}
+
+.sgs-registry ::selection { background: oklch(0.58 0.13 45 / 0.26); color: var(--color-ink); }
+
+.sgs-registry *:focus-visible {
+  outline: 2px solid var(--color-sgs);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@keyframes sgs-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.sgs-registry .drift { animation: sgs-drift 70s linear infinite; }
+
+.sgs-registry .no-scrollbar::-webkit-scrollbar { display: none; }
+.sgs-registry .no-scrollbar { scrollbar-width: none; }
+
+@keyframes sgs-draw {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.sgs-registry .draw { transform-origin: left center; animation: sgs-draw 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+.sgs-registry .tape-row { display: flex; gap: 3rem; align-items: baseline; white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sgs-registry .drift,
+  .sgs-registry .draw { animation: none !important; }
+}

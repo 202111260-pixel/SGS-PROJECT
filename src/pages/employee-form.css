@@ -1,0 +1,32 @@
+/*
+  Employee-form skin — a quieter, more spacious "Apple-clean" pass over the
+  shared registry surface, with markedly darker, higher-contrast text in light
+  mode for maximum legibility. Everything is scoped to `.emp-form` so the
+  dashboard/landing identity is never touched.
+
+  Dark mode intentionally falls through to the registry's own dark tokens
+  (the `:not([data-theme="dark"])` guard), so the page still reads well at night.
+*/
+
+.sgs-registry.emp-form:not([data-theme="dark"]) {
+  /* Deep, near-black warm ink — clear and confident. */
+  --color-ink: oklch(0.155 0.011 55);
+  --color-ink-2: oklch(0.27 0.013 55);
+  --color-ink-3: oklch(0.44 0.012 58);
+  --color-ink-4: oklch(0.62 0.01 60);
+  /* Hairlines a touch lighter so the darker type carries the structure. */
+  --color-rule-soft: oklch(0.905 0.008 80);
+  --color-rule: oklch(0.85 0.01 75);
+}
+
+/* Softer, larger radii read as more premium than the cockpit's tighter corners. */
+.emp-form .surface { border-radius: 1.6rem; }
+
+/* Placeholders shouldn't compete with the now-darker labels. */
+.emp-form ::placeholder { opacity: 1; }
+
+/* Native date/select controls inherit the darker ink cleanly. */
+.emp-form input[type="date"],
+.emp-form select { color-scheme: light; }
+.sgs-registry.emp-form[data-theme="dark"] input[type="date"],
+.sgs-registry.emp-form[data-theme="dark"] select { color-scheme: dark; }

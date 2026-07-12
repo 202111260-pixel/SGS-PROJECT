@@ -1,0 +1,1120 @@
+<title>SGS — Wireframes</title>
+<style>
+  :root{
+    --canvas:#e4e5e7;
+    --canvas-grid:rgba(0,0,0,.045);
+    --label-ink:#4a4d53;
+    --label-soft:#797d84;
+    --paper:#ffffff;
+    --ink:#1c1e22;
+    --ink-soft:#8b8f96;
+    --line:#d3d6db;
+    --line-strong:#b9bdc4;
+    --fill:#ecedf0;
+    --fill-2:#f5f6f8;
+    --dash:#c2c6cd;
+    --mono:"SFMono-Regular",ui-monospace,"Cascadia Mono","Consolas",monospace;
+    --sans:"Segoe UI","Helvetica Neue",Tahoma,Arial,"Geeza Pro",sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --canvas:#15171b; --canvas-grid:rgba(255,255,255,.035); --label-ink:#c6c9cf; --label-soft:#8b8f96; }
+  }
+  :root[data-theme="dark"]{ --canvas:#15171b; --canvas-grid:rgba(255,255,255,.035); --label-ink:#c6c9cf; --label-soft:#8b8f96; }
+  :root[data-theme="light"]{ --canvas:#e4e5e7; --canvas-grid:rgba(0,0,0,.045); --label-ink:#4a4d53; --label-soft:#797d84; }
+
+  *{ box-sizing:border-box; }
+
+  .wrap{
+    font-family:var(--sans);
+    color:var(--label-ink);
+    background-color:var(--canvas);
+    background-image:linear-gradient(var(--canvas-grid) 1px,transparent 1px),linear-gradient(90deg,var(--canvas-grid) 1px,transparent 1px);
+    background-size:32px 32px;
+    min-height:100vh;
+    padding:40px clamp(14px,4vw,56px) 90px;
+    line-height:1.5;
+  }
+
+  /* ---------- document header ---------- */
+  .doc-head{ max-width:1180px; margin:0 auto 14px; }
+  .doc-kicker{ font-family:var(--mono); font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:var(--label-soft); }
+  .doc-title{ font-size:clamp(24px,4vw,38px); font-weight:800; letter-spacing:-.01em; color:var(--label-ink); margin:8px 0 6px; text-wrap:balance; }
+  .doc-sub{ font-size:15px; color:var(--label-soft); max-width:70ch; }
+
+  /* index + legend */
+  .meta-bar{ max-width:1180px; margin:22px auto 40px; display:flex; flex-wrap:wrap; gap:14px 26px; align-items:flex-start;
+    border-top:1px solid var(--line-strong); border-bottom:1px solid var(--line-strong); padding:16px 0; }
+  .meta-col{ display:flex; flex-direction:column; gap:8px; }
+  .meta-h{ font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--label-soft); }
+  .idx{ display:flex; flex-wrap:wrap; gap:6px 8px; }
+  .idx a{ font-family:var(--mono); font-size:12.5px; color:var(--label-ink); text-decoration:none;
+    border:1px solid var(--line-strong); border-radius:2px; padding:4px 9px; background:transparent; }
+  .idx a:hover{ background:var(--label-ink); color:var(--canvas); }
+  .idx a:focus-visible{ outline:2px solid var(--label-ink); outline-offset:2px; }
+  .legend{ display:flex; flex-wrap:wrap; gap:6px 18px; font-size:12.5px; color:var(--label-soft); }
+  .legend span{ display:inline-flex; align-items:center; gap:7px; }
+
+  /* ---------- artboard scaffold ---------- */
+  .frame{ max-width:1180px; margin:0 auto; padding-top:58px; scroll-margin-top:20px; }
+  .frame + .frame{ margin-top:26px; }
+  .frame-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  .frame-no{ font-family:var(--mono); font-size:13px; font-weight:700; color:var(--canvas);
+    background:var(--label-ink); border-radius:2px; padding:3px 9px; letter-spacing:.05em; }
+  .frame-title{ font-size:19px; font-weight:800; color:var(--label-ink); }
+  .frame-note{ font-size:13px; color:var(--label-soft); }
+  .frame-note::before{ content:"—  "; }
+
+  .board{ background:var(--paper); color:var(--ink); border:1px solid var(--line-strong);
+    border-radius:4px; box-shadow:0 1px 0 rgba(0,0,0,.04),0 18px 40px -28px rgba(0,0,0,.45); overflow:hidden; }
+  .browser{ display:flex; align-items:center; gap:8px; padding:10px 14px; border-bottom:1px solid var(--line);
+    background:var(--fill-2); }
+  .dots{ display:flex; gap:6px; }
+  .dots i{ width:9px; height:9px; border:1px solid var(--line-strong); border-radius:50%; display:block; }
+  .urlbar{ flex:1; font-family:var(--mono); font-size:11.5px; color:var(--ink-soft);
+    border:1px solid var(--line); border-radius:3px; padding:4px 10px; background:var(--paper); }
+  .canvas-pad{ padding:clamp(16px,2.6vw,30px); }
+
+  /* app chrome inside a board (sidebar layout) */
+  .app{ display:grid; grid-template-columns:200px 1fr; min-height:520px; }
+  .side{ border-inline-end:1px solid var(--line); padding:18px 14px; background:var(--fill-2); display:flex; flex-direction:column; gap:6px; }
+  .brand{ font-weight:800; font-size:15px; letter-spacing:.22em; color:var(--paper);
+    background:var(--ink); border-radius:5px; padding:11px 10px; text-align:center; margin-bottom:14px; }
+  .nav-i{ font-size:13px; color:var(--ink-soft); padding:8px 10px; border-radius:3px; border:1px solid transparent; }
+  .nav-i.on{ color:var(--ink); background:var(--paper); border-color:var(--line); font-weight:700; }
+  .main{ padding:clamp(16px,2.4vw,26px); display:flex; flex-direction:column; gap:18px; }
+
+  /* topbar within main */
+  .topbar{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+  .h-page{ font-size:20px; font-weight:800; color:var(--ink); }
+  .crumb{ font-family:var(--mono); font-size:11px; color:var(--ink-soft); letter-spacing:.05em; }
+
+  /* generic wireframe atoms */
+  .lbl{ font-size:12px; color:var(--ink-soft); margin-bottom:6px; display:block; }
+  .input{ border:1px solid var(--line-strong); border-radius:3px; background:var(--paper);
+    padding:9px 11px; font-size:13px; color:var(--ink-soft); min-height:38px; display:flex; align-items:center; }
+  .input.ph{ color:#a9adb4; }
+  .select{ position:relative; }
+  .select::after{ content:""; position:absolute; inset-inline-start:12px; top:50%; margin-top:-2px;
+    border-inline:4px solid transparent; border-top:5px solid var(--ink-soft); }
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; font-size:13px; font-weight:700;
+    border:1.5px solid var(--ink); border-radius:3px; padding:9px 16px; background:var(--paper); color:var(--ink); }
+  .btn.pri{ background:var(--ink); color:var(--paper); }
+  .btn.sm{ padding:6px 12px; font-size:12px; font-weight:600; border-width:1px; }
+  .btn.ghost{ border-style:dashed; border-color:var(--line-strong); color:var(--ink-soft); font-weight:600; }
+
+  .row{ display:flex; gap:12px; flex-wrap:wrap; }
+  .grid{ display:grid; gap:14px; }
+  .g-2{ grid-template-columns:1fr 1fr; }
+  .g-3{ grid-template-columns:repeat(3,1fr); }
+  .g-4{ grid-template-columns:repeat(4,1fr); }
+  @media (max-width:720px){ .g-2,.g-3,.g-4{ grid-template-columns:1fr 1fr; } .app{ grid-template-columns:1fr; } .side{ flex-direction:row; flex-wrap:wrap; border-inline-end:none; border-bottom:1px solid var(--line);} }
+  @media (max-width:460px){ .g-2,.g-3,.g-4{ grid-template-columns:1fr; } }
+
+  .card{ border:1px solid var(--line); border-radius:4px; padding:14px 15px; background:var(--paper); }
+  .card-h{ font-size:12px; font-weight:800; letter-spacing:.02em; color:var(--ink);
+    text-transform:none; padding-bottom:9px; margin-bottom:11px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
+  .card-h .tag{ font-family:var(--mono); font-size:10px; font-weight:600; color:var(--ink-soft); letter-spacing:.04em; }
+
+  /* placeholder bars for "data" */
+  .bar{ height:9px; border-radius:2px; background:var(--fill); display:block; }
+  .bar.d{ background:var(--fill); }
+  .kv{ display:flex; flex-direction:column; gap:5px; }
+  .kv .k{ font-size:11px; color:var(--ink-soft); }
+  .kv .v{ font-size:13px; color:var(--ink); font-weight:600; }
+
+  /* search / filter strip */
+  .filters{ display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+  .filters .f{ flex:1; min-width:130px; }
+  .filters .fx{ min-width:150px; }
+
+  /* table */
+  .tbl{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  .tbl th{ text-align:start; font-weight:700; color:var(--ink); background:var(--fill-2);
+    border-bottom:1.5px solid var(--line-strong); padding:10px 11px; white-space:nowrap; }
+  .tbl td{ border-bottom:1px solid var(--line); padding:10px 11px; color:var(--ink-soft); vertical-align:middle; }
+  .tbl tr:last-child td{ border-bottom:none; }
+  .tbl .num{ font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--ink); }
+  .tbl-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:4px; }
+
+  .cell-bar{ height:8px; width:70%; background:var(--fill); border-radius:2px; display:inline-block; vertical-align:middle; }
+  .cell-bar.w40{ width:40%; } .cell-bar.w55{ width:55%; } .cell-bar.w85{ width:85%; }
+
+  /* status dots (geometric, not icons) */
+  .dot{ width:11px; height:11px; border-radius:50%; display:inline-block; vertical-align:-1px; border:1.5px solid var(--ink); }
+  .dot.full{ background:var(--ink); }
+  .dot.half{ background:linear-gradient(90deg,var(--ink) 50%,var(--paper) 50%); }
+  .dot.empty{ background:var(--paper); }
+  .st{ display:inline-flex; align-items:center; gap:7px; font-size:12px; color:var(--ink); white-space:nowrap; }
+
+  .pill{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--ink);
+    border:1px solid var(--ink); border-radius:999px; padding:2px 10px; }
+  .pill.soft{ border-color:var(--line-strong); color:var(--ink-soft); font-weight:600; }
+
+  .grade{ font-family:var(--mono); font-weight:800; font-size:15px; color:var(--paper); background:var(--ink);
+    width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; border-radius:4px; }
+  .grade.out{ background:var(--paper); color:var(--ink); border:1.5px solid var(--ink); }
+
+  /* upload dropzone */
+  .drop{ border:1.5px dashed var(--dash); border-radius:4px; padding:22px 16px; text-align:center;
+    color:var(--ink-soft); font-size:12.5px; background:var(--fill-2); }
+  .drop.sm{ padding:12px; }
+
+  /* compact file field + upload rows */
+  .filebox{ display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:38px;
+    border:1px dashed var(--line-strong); border-radius:3px; padding:6px 10px; font-size:12px; color:var(--ink-soft); background:var(--fill-2); }
+  .filebox .btn{ padding:4px 11px; font-size:11px; border-width:1px; }
+  .doc-row{ display:grid; grid-template-columns:150px 1fr 150px; gap:12px; align-items:end; padding:11px 0; border-bottom:1px solid var(--line); }
+  .doc-row:last-of-type{ border-bottom:none; }
+  .doc-row .dn{ font-size:12.5px; font-weight:700; color:var(--ink); }
+  .cert-row{ display:grid; grid-template-columns:1.3fr .8fr .9fr .9fr 1.1fr; gap:10px; align-items:end;
+    padding:12px; border:1px solid var(--line); border-radius:4px; margin-bottom:10px; }
+  @media (max-width:820px){ .doc-row{ grid-template-columns:1fr 1fr; } .cert-row{ grid-template-columns:1fr 1fr; } }
+  .req{ color:var(--ink); font-weight:800; }
+  .sec-num{ font-family:var(--mono); font-size:10px; color:var(--ink-soft); border:1px solid var(--line-strong);
+    border-radius:2px; padding:1px 6px; margin-inline-start:6px; letter-spacing:.04em; }
+
+  /* annotation callouts */
+  .anno{ display:flex; gap:10px; align-items:flex-start; font-size:12.5px; color:var(--label-soft);
+    margin-top:12px; max-width:80ch; }
+  .anno b{ font-family:var(--mono); font-size:11px; color:var(--label-ink); border:1px solid var(--label-soft);
+    border-radius:50%; width:19px; height:19px; min-width:19px; display:inline-flex; align-items:center; justify-content:center; }
+  .anno-wrap{ max-width:1180px; margin:12px auto 0; }
+
+  /* login specific */
+  .login-stage{ display:flex; align-items:center; justify-content:center; padding:56px 20px; background:var(--fill-2); }
+  .login-card{ width:340px; max-width:100%; background:var(--paper); border:1px solid var(--line-strong);
+    border-radius:6px; padding:28px 24px; display:flex; flex-direction:column; gap:14px; }
+  .login-logo{ align-self:center; display:flex; flex-direction:column; align-items:center; gap:9px; margin-bottom:2px; }
+  .login-logo .lm{ font-weight:800; letter-spacing:.26em; color:var(--paper); background:var(--ink);
+    border-radius:6px; padding:12px 24px; font-size:20px; }
+  .login-logo .lt{ font-size:11px; color:var(--ink-soft); letter-spacing:.02em; }
+
+  /* promotion ladder */
+  .ladders{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:720px){ .ladders{ grid-template-columns:1fr; } }
+  .ladder{ border:1px solid var(--line); border-radius:4px; padding:14px; }
+  .ladder h5{ margin:0 0 12px; font-size:12px; font-weight:800; color:var(--ink); }
+  .track{ display:flex; align-items:center; gap:8px; justify-content:center; direction:ltr; }
+  .node{ font-family:var(--mono); font-weight:800; font-size:14px; width:30px; height:30px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center; border:1.5px solid var(--ink); color:var(--ink); background:var(--paper); }
+  .node.done{ background:var(--ink); color:var(--paper); }
+  .arrow{ width:24px; height:2px; background:var(--ink); position:relative; }
+  .arrow::after{ content:""; position:absolute; inset-inline-end:-1px; top:-3px; border-block:4px solid transparent; border-inline-start:6px solid var(--ink); }
+  .ladder small{ display:block; text-align:center; margin-top:9px; font-size:10.5px; color:var(--ink-soft); }
+
+  .section-split{ border:none; border-top:1px dashed var(--line-strong); margin:4px 0; }
+  .subhead{ font-size:12px; font-weight:800; color:var(--ink); letter-spacing:.03em; }
+  .subhead .mut{ font-weight:600; color:var(--ink-soft); }
+
+  /* two-role stack labels */
+  .role-tab{ display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11px;
+    color:var(--ink); border:1px solid var(--line-strong); border-radius:3px; padding:4px 10px; margin-bottom:10px; }
+
+  .kpi{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); font-size:12.5px; }
+  .kpi:last-child{ border-bottom:none; }
+  .kpi .meter{ width:120px; height:8px; border:1px solid var(--line-strong); border-radius:999px; overflow:hidden; }
+  .kpi .meter i{ display:block; height:100%; background:var(--ink); }
+
+  .stat{ border:1px solid var(--line); border-radius:4px; padding:13px 14px; display:flex; flex-direction:column; gap:6px; }
+  .stat .n{ font-family:var(--mono); font-size:24px; font-weight:800; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .stat .t{ font-size:11.5px; color:var(--ink-soft); }
+
+  /* monthly rotational schedule */
+  .codes{ display:flex; flex-wrap:wrap; gap:6px; }
+  .code{ font-family:var(--mono); font-size:11px; font-weight:700; border:1px solid var(--ink); border-radius:3px;
+    padding:3px 9px; color:var(--ink); background:var(--paper); white-space:nowrap; }
+  .code.on{ background:var(--ink); color:var(--paper); }
+  .sched-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:4px; }
+  .sched{ border-collapse:collapse; font-size:11px; min-width:760px; }
+  .sched th,.sched td{ border:1px solid var(--line); text-align:center; }
+  .sched thead th{ background:var(--fill-2); padding:7px 5px; font-family:var(--mono); color:var(--ink); font-weight:700; white-space:nowrap; }
+  .sched .emp{ text-align:start; padding:9px 11px; white-space:nowrap; background:var(--paper); position:sticky; inset-inline-start:0; z-index:1; }
+  .sched .emp b{ font-size:12.5px; color:var(--ink); font-weight:700; }
+  .sched .emp small{ display:block; font-family:var(--mono); font-size:9.5px; color:var(--ink-soft); }
+  .sched td.cell{ width:34px; height:34px; font-family:var(--mono); font-weight:700; font-size:10.5px; color:var(--ink); background:var(--paper); }
+  .sched td.cell.off{ color:var(--ink-soft); background:var(--fill-2); }
+  .sched td.cell.lv{ background:var(--fill); }
+  .sched .r-tag{ font-family:var(--mono); font-size:9px; font-weight:700; border:1px solid var(--line-strong);
+    border-radius:2px; padding:1px 5px; color:var(--ink-soft); }
+  .leg-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 22px; }
+  @media (max-width:560px){ .leg-grid{ grid-template-columns:1fr; } }
+  .leg-row{ display:flex; align-items:center; gap:12px; padding:6px 0; border-bottom:1px solid var(--line); font-size:12px; }
+  .leg-row .c{ font-family:var(--mono); font-weight:800; color:var(--ink); min-width:52px; }
+  .leg-row .m{ color:var(--ink-soft); }
+
+  /* mandatory training matrix */
+  .matrix-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:4px; }
+  .matrix{ border-collapse:collapse; font-size:11px; min-width:820px; width:100%; }
+  .matrix th,.matrix td{ border:1px solid var(--line); text-align:center; padding:8px 6px; }
+  .matrix thead th{ background:var(--fill-2); font-family:var(--mono); font-weight:700; color:var(--ink); white-space:nowrap; }
+  .matrix .role{ text-align:start; white-space:nowrap; font-weight:700; color:var(--ink);
+    background:var(--paper); position:sticky; inset-inline-start:0; z-index:1; padding-inline:11px; min-width:150px; }
+  .matrix .role small{ display:block; font-family:var(--sans); font-weight:400; font-size:10px; color:var(--ink-soft); }
+  .matrix .nm{ color:var(--line-strong); }
+  .matrix tbody tr:nth-child(even) td{ background:var(--fill-2); }
+
+  /* grade rubric C/B/A */
+  .rubric{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  @media (max-width:720px){ .rubric{ grid-template-columns:1fr; } }
+  .rub{ border:1px solid var(--line); border-radius:4px; padding:16px; display:flex; flex-direction:column; gap:14px; }
+  .rub-h{ display:flex; align-items:center; gap:12px; }
+  .rub-h .t{ font-size:12px; font-weight:800; color:var(--ink); }
+  .rub-c .k{ font-family:var(--mono); font-size:9.5px; color:var(--ink-soft); letter-spacing:.08em; display:block; margin-bottom:4px; text-transform:uppercase; }
+  .rub-c .v{ font-size:12.5px; color:var(--ink); line-height:1.55; }
+
+  /* per-level training requirements inside a ladder */
+  .lvl-req{ margin-top:14px; display:flex; flex-direction:column; gap:9px; border-top:1px dashed var(--line); padding-top:12px; }
+  .lvl-req .lr{ display:flex; gap:8px; align-items:flex-start; }
+  .lvl-req .g{ font-family:var(--mono); font-weight:800; color:var(--paper); background:var(--ink); border-radius:3px;
+    width:19px; height:19px; min-width:19px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; }
+  .lvl-req .g.out{ background:var(--paper); color:var(--ink); border:1px solid var(--ink); }
+  .lvl-req .chips{ display:flex; flex-wrap:wrap; gap:4px; }
+  .code.xs{ font-size:9.5px; padding:2px 6px; }
+  .code.plus{ border-style:dashed; }
+
+  .foot{ max-width:1180px; margin:64px auto 0; padding-top:18px; border-top:1px solid var(--line-strong);
+    font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--label-soft); text-transform:uppercase; }
+</style>
+
+<div class="wrap" dir="rtl" lang="ar">
+
+  <header class="doc-head">
+    <div class="doc-kicker">شركة SGS · نظام الموارد البشرية والجدارة</div>
+    <h1 class="doc-title">مخطّطات الواجهات — Wireframes</h1>
+    <p class="doc-sub">مخطّطات هيكلية بالأبيض والأسود لصفحات النظام قبل بنائها. كل صفحة لوحة (Artboard) مستقلة توضّح ترتيب العناصر وتدفّق الاستخدام — بدون ألوان أو أيقونات، تركيزٌ على البنية فقط.</p>
+  </header>
+
+  <div class="meta-bar">
+    <div class="meta-col" style="flex:1; min-width:240px;">
+      <span class="meta-h">الصفحات</span>
+      <nav class="idx">
+        <a href="#s1">1 · تسجيل الدخول</a>
+        <a href="#s2">2 · قائمة الموظفين</a>
+        <a href="#s3">3 · إضافة / تعديل موظف</a>
+        <a href="#s4">4 · ملف الموظف</a>
+        <a href="#s5">5 · التدريب والجدارة</a>
+        <a href="#s6">6 · التنبيهات</a>
+        <a href="#s7">7 · لوحة المستخدم</a>
+        <a href="#s8">8 · الجدول الشهري للشفتات</a>
+      </nav>
+    </div>
+    <div class="meta-col">
+      <span class="meta-h">دليل الرموز</span>
+      <div class="legend">
+        <span><i class="dot full"></i> مكتمل / ساري</span>
+        <span><i class="dot half"></i> قريب الانتهاء</span>
+        <span><i class="dot empty"></i> ناقص / منتهٍ</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1 · LOGIN ============ -->
+  <section class="frame" id="s1">
+    <div class="frame-head">
+      <span class="frame-no">01</span>
+      <h2 class="frame-title">تسجيل الدخول</h2>
+      <span class="frame-note">إيميل + كلمة مرور، ويوجَّه المستخدم لصفحته حسب دوره</span>
+    </div>
+    <div class="board">
+      <div class="browser"><span class="dots"><i></i><i></i><i></i></span><span class="urlbar">sgs-system.local / login</span></div>
+      <div class="login-stage">
+        <form class="login-card">
+          <div class="login-logo">
+            <span class="lm">SGS</span>
+            <span class="lt">نظام الموارد البشرية والجدارة</span>
+          </div>
+          <div>
+            <span class="lbl">البريد الإلكتروني</span>
+            <div class="input ph">name@sgs.com</div>
+          </div>
+          <div>
+            <span class="lbl">كلمة المرور</span>
+            <div class="input ph">••••••••</div>
+          </div>
+          <div class="btn pri" style="width:100%;">تسجيل الدخول</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="pill soft">موظف</span>
+            <span class="pill soft">مشرف</span>
+            <span class="pill soft">HR</span>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="anno-wrap">
+      <div class="anno"><b>1</b><span>عند نجاح الدخول، يُوجَّه المستخدم تلقائياً إلى لوحته المناسبة حسب الدور: <b style="border:none;width:auto;height:auto;display:inline;font-family:inherit;">موظف</b> → لوحة المستخدم، <b style="border:none;width:auto;height:auto;display:inline;font-family:inherit;">مشرف</b> → لوحة الفريق، <b style="border:none;width:auto;height:auto;display:inline;font-family:inherit;">HR</b> → قائمة الموظفين.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 2 · EMPLOYEES LIST ============ -->
+  <section class="frame" id="s2">
+    <div class="frame-head">
+      <span class="frame-no">02</span>
+      <h2 class="frame-title">قائمة الموظفين</h2>
+      <span class="frame-note">جدول ببحث وفلاتر + زر «إضافة موظف» يفتح نافذة منبثقة</span>
+    </div>
+    <div class="board">
+      <div class="browser"><span class="dots"><i></i><i></i><i></i></span><span class="urlbar">sgs-system.local / employees</span></div>
+      <div class="app">
+        <aside class="side">
+          <div class="brand">SGS</div>
+          <span class="nav-i on">الموظفون</span>
+          <span class="nav-i">التدريب والجدارة</span>
+          <span class="nav-i">التنبيهات</span>
+          <span class="nav-i">لوحتي</span>
+        </aside>
+        <div class="main">
+          <div class="topbar">
+            <div class="h-page">الموظفون</div>
+            <div class="btn pri">＋ إضافة موظف</div>
+          </div>
+
+          <div class="filters">
+            <div class="f"><span class="lbl">بحث بالاسم / الرقم الوظيفي</span><div class="input ph">اكتب للبحث…</div></div>
+            <div class="fx select"><span class="lbl">المشروع</span><div class="input">الكل</div></div>
+            <div class="fx select"><span class="lbl">الدرجة</span><div class="input">الكل</div></div>
+            <div class="fx select"><span class="lbl">حالة الوثائق</span><div class="input">الكل</div></div>
+          </div>
+
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>الاسم</th><th>الرقم الوظيفي</th><th>البريد</th><th>المنصب</th><th>المشروع</th><th>الدرجة</th><th>الوثائق</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><span class="cell-bar w85"></span></td><td class="num">10241</td><td><span class="cell-bar"></span></td><td>Operator</td><td><span class="cell-bar w55"></span></td><td><span class="pill">B</span></td><td><span class="st"><i class="dot full"></i></span></td><td><span class="btn sm">عرض</span></td></tr>
+                <tr><td><span class="cell-bar w55"></span></td><td class="num">10242</td><td><span class="cell-bar"></span></td><td>Assistant</td><td><span class="cell-bar w40"></span></td><td><span class="pill">C</span></td><td><span class="st"><i class="dot empty"></i></span></td><td><span class="btn sm">عرض</span></td></tr>
+                <tr><td><span class="cell-bar"></span></td><td class="num">10243</td><td><span class="cell-bar w85"></span></td><td>Supervisor</td><td><span class="cell-bar w55"></span></td><td><span class="pill">A</span></td><td><span class="st"><i class="dot full"></i></span></td><td><span class="btn sm">عرض</span></td></tr>
+                <tr><td><span class="cell-bar w55"></span></td><td class="num">10244</td><td><span class="cell-bar"></span></td><td>Operator</td><td><span class="cell-bar w85"></span></td><td><span class="pill">B</span></td><td><span class="st"><i class="dot half"></i></span></td><td><span class="btn sm">عرض</span></td></tr>
+                <tr><td><span class="cell-bar w85"></span></td><td class="num">10245</td><td><span class="cell-bar w55"></span></td><td>Assistant</td><td><span class="cell-bar w40"></span></td><td><span class="pill">C</span></td><td><span class="st"><i class="dot full"></i></span></td><td><span class="btn sm">عرض</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- pointer to dedicated add/edit page -->
+          <div class="card" style="border-style:dashed; border-color:var(--ink); display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <strong style="font-size:13px; color:var(--ink);">زر «＋ إضافة موظف» ← يفتح صفحة مستقلة</strong>
+              <span style="font-size:12px; color:var(--ink-soft);">صفحة كاملة لتعبئة البيانات ورفع كل الملفات (الوثائق + الشهادات) — راجع صفحة 3.</span>
+            </div>
+            <a href="#s3" class="btn sm" style="text-decoration:none;">الانتقال إلى صفحة 3 ↩</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="anno-wrap">
+      <div class="anno"><b>1</b><span>شريط علوي فيه بحث + فلاتر (المشروع / الدرجة / حالة الوثائق).</span></div>
+      <div class="anno"><b>2</b><span>عمود «الوثائق» يعرض نقطة حالة واحدة تلخّص اكتمال وثائق الموظف؛ الضغط على «عرض» يفتح ملف الموظف (صفحة 4).</span></div>
+      <div class="anno"><b>3</b><span>زر «＋ إضافة موظف» ينقل إلى <b style="border:none;width:auto;height:auto;display:inline;font-family:inherit;">صفحة إضافة/تعديل موظف المستقلة (صفحة 3)</b> — فيها تعبئة كل البيانات ورفع الوثائق والشهادات.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 3 · ADD / EDIT EMPLOYEE ============ -->
+  <section class="frame" id="s3">
+    <div class="frame-head">
+      <span class="frame-no">03</span>
+      <h2 class="frame-title">إضافة / تعديل موظف</h2>
+      <span class="frame-note">صفحة مستقلة لتعبئة كل بيانات الموظف ورفع الوثائق والشهادات — نفسها تُستخدم للإضافة والتعديل</span>
+    </div>
+    <div class="board">
+      <div class="browser"><span class="dots"><i></i><i></i><i></i></span><span class="urlbar">sgs-system.local / employees / new</span></div>
+      <div class="app">
+        <aside class="side">
+          <div class="brand">SGS</div>
+          <span class="nav-i on">الموظفون</span>
+          <span class="nav-i">التدريب والجدارة</span>
+          <span class="nav-i">التنبيهات</span>
+          <span class="nav-i">لوحتي</span>
+        </aside>
+        <div class="main">
+          <div class="crumb">الموظفون / إضافة موظف جديد</div>
+          <div class="topbar">
+            <div class="h-page">إضافة موظف جديد</div>
+            <div class="row"><span class="btn sm ghost">إلغاء</span><span class="btn sm pri">حفظ</span></div>
+          </div>
+
+          <!-- A: basic data -->
+          <div class="card">
+            <div class="card-h">البيانات الأساسية <span class="sec-num">القسم أ</span></div>
+            <div class="grid g-3" style="gap:14px;">
+              <div><span class="lbl">الاسم الكامل <span class="req">*</span></span><div class="input ph">—</div></div>
+              <div><span class="lbl">الرقم الوظيفي <span class="req">*</span></span><div class="input ph">مثال: 10246</div></div>
+              <div><span class="lbl">البريد الإلكتروني <span class="req">*</span></span><div class="input ph">name@sgs.com</div></div>
+              <div><span class="lbl">رقم الجوال</span><div class="input ph">+968 —</div></div>
+              <div class="select"><span class="lbl">المنصب <span class="req">*</span></span><div class="input">Assistant / Operator / Supervisor</div></div>
+              <div class="select"><span class="lbl">المشروع <span class="req">*</span></span><div class="input ph">اختر المشروع…</div></div>
+              <div class="select"><span class="lbl">الدرجة الحالية</span><div class="input">C / B / A</div></div>
+              <div><span class="lbl">تاريخ التعيين</span><div class="input ph">YYYY-MM-DD</div></div>
+              <div><span class="lbl">الملف الشخصي (CV)</span><div class="filebox"><span>CV.pdf</span><span class="btn sm">رفع ملف</span></div></div>
+            </div>
+          </div>
+
+          <!-- B: official documents (file + expiry each) -->
+          <div class="card">
+            <div class="card-h">الوثائق الرسمية — رفع ملف + تاريخ انتهاء لكلٍ منها <span class="sec-num">القسم ب</span></div>
+            <div class="doc-row">
+              <span class="dn">الهوية الشخصية</span>
+              <div><span class="lbl">الملف / الرابط</span><div class="filebox"><span>id-card.pdf</span><span class="btn sm">رفع ملف</span></div></div>
+              <div><span class="lbl">تاريخ الانتهاء</span><div class="input ph">YYYY-MM-DD</div></div>
+            </div>
+            <div class="doc-row">
+              <span class="dn">FTW (Fit To Work)</span>
+              <div><span class="lbl">الملف / الرابط</span><div class="filebox"><span>ftw.pdf</span><span class="btn sm">رفع ملف</span></div></div>
+              <div><span class="lbl">تاريخ الانتهاء</span><div class="input ph">YYYY-MM-DD</div></div>
+            </div>
+          </div>
+
+          <!-- B2: mandatory safety trainings certificates -->
+          <div class="card">
+            <div class="card-h">الشهادات الإلزامية للسلامة (Mandatory Trainings) — رفع + تاريخ انتهاء <span class="sec-num">القسم ب-٢</span></div>
+            <div class="doc-row">
+              <span class="dn">HSE</span>
+              <div><span class="lbl">ملف الشهادة</span><div class="filebox"><span>hse.pdf</span><span class="btn sm">رفع ملف</span></div></div>
+              <div><span class="lbl">تاريخ الانتهاء</span><div class="input ph">YYYY-MM-DD</div></div>
+            </div>
+            <div class="doc-row">
+              <span class="dn">H2S</span>
+              <div><span class="lbl">ملف الشهادة</span><div class="filebox"><span>h2s.pdf</span><span class="btn sm">رفع ملف</span></div></div>
+              <div><span class="lbl">تاريخ الانتهاء</span><div class="input ph">YYYY-MM-DD</div></div>
+            </div>
+            <div class="doc-row">
+              <span class="dn">DD — Light <span style="font-weight:400; color:var(--ink-soft);">(Defensive Driving)</span></span>
+              <div><span class="lbl">ملف الشهادة</span><div class="filebox"><span>dd-light.pdf</span><span class="btn sm">رفع ملف</span></div></div>
+              <div><span class="lbl">تاريخ الانتهاء</span><div class="input ph">YYYY-MM-DD</div></div>
+            </div>
+            <div class="doc-row">
+              <span class="dn">DD — Heavy <span style="font-weight:400; color:var(--ink-soft);">(Defensive Driving)</span></span>
+              <div><span class="lbl">ملف الشهادة</span><div class="filebox"><span>dd-heavy.pdf</span><span class="btn sm">رفع ملف</span></div></div>
+              <div><span class="lbl">تاريخ الانتهاء</span><div class="input ph">YYYY-MM-DD</div></div>
+            </div>
+            <div class="doc-row">
+              <span class="dn">IFR</span>
+              <div><span class="lbl">ملف الشهادة</span><div class="filebox"><span>ifr.pdf</span><span class="btn sm">رفع ملف</span></div></div>
+              <div><span class="lbl">تاريخ الانتهاء</span><div class="input ph">YYYY-MM-DD</div></div>
+            </div>
+            <div class="doc-row">
+              <span class="dn">FA <span style="font-weight:400; color:var(--ink-soft);">(First Aid)</span></span>
+              <div><span class="lbl">ملف الشهادة</span><div class="filebox"><span>fa.pdf</span><span class="btn sm">رفع ملف</span></div></div>
+              <div><span class="lbl">تاريخ الانتهاء</span><div class="input ph">YYYY-MM-DD</div></div>
+            </div>
+            <div class="anno" style="margin-top:6px;"><b>i</b><span>هذه الشهادات إلزامية للأدوار As / Op / Sup؛ يقدر المشرف يرفعها ويعدّلها، وتنعكس تواريخ انتهائها تلقائياً في صفحة التنبيهات.</span></div>
+          </div>
+
+          <!-- C: crew / shift -->
+          <div class="card">
+            <div class="card-h">الطاقم / الشفت <span class="sec-num">القسم ج</span></div>
+            <div class="grid g-3" style="gap:14px;">
+              <div><span class="lbl">الشفت</span><div class="row" style="gap:8px;"><span class="pill">نهار</span><span class="pill soft">ليل</span></div></div>
+              <div class="select"><span class="lbl">الفريق / المشرف</span><div class="input ph">اختر المشرف…</div></div>
+              <div><span class="lbl">ملاحظات تسليم الشفت (Handover)</span><div class="input ph">—</div></div>
+            </div>
+          </div>
+
+          <!-- D: certificates & courses upload (Assistant/Operator/Supervisor) -->
+          <div class="card">
+            <div class="card-h">الشهادات والدورات — إرفاق ملفات الدورات التي أخذها <span class="sec-num">القسم د</span></div>
+            <div class="cert-row">
+              <div class="select"><span class="lbl">الدورة (من ٦ وحدات)</span><div class="input ph">اختر الوحدة…</div></div>
+              <div class="select"><span class="lbl">النتيجة</span><div class="input">ناجح / راسب</div></div>
+              <div><span class="lbl">تاريخ الإصدار</span><div class="input ph">YYYY-MM-DD</div></div>
+              <div><span class="lbl">تاريخ الانتهاء</span><div class="input ph">YYYY-MM-DD</div></div>
+              <div><span class="lbl">ملف الشهادة</span><div class="filebox"><span>cert-01.pdf</span><span class="btn sm">رفع ملف</span></div></div>
+            </div>
+            <div class="cert-row">
+              <div class="select"><span class="lbl">الدورة (من ٦ وحدات)</span><div class="input ph">اختر الوحدة…</div></div>
+              <div class="select"><span class="lbl">النتيجة</span><div class="input">ناجح / راسب</div></div>
+              <div><span class="lbl">تاريخ الإصدار</span><div class="input ph">YYYY-MM-DD</div></div>
+              <div><span class="lbl">تاريخ الانتهاء</span><div class="input ph">YYYY-MM-DD</div></div>
+              <div><span class="lbl">ملف الشهادة</span><div class="filebox"><span>—</span><span class="btn sm">رفع ملف</span></div></div>
+            </div>
+            <div class="row" style="justify-content:space-between; align-items:center; margin-top:6px;">
+              <span class="btn sm ghost">＋ إضافة شهادة / دورة أخرى</span>
+              <span style="font-size:11.5px; color:var(--ink-soft);">صيغ مقبولة: PDF · JPG · PNG</span>
+            </div>
+          </div>
+
+          <div class="row" style="justify-content:flex-end; margin-top:4px;">
+            <div class="btn ghost">إلغاء</div><div class="btn">حفظ كمسودّة</div><div class="btn pri">حفظ الموظف</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="anno-wrap">
+      <div class="anno"><b>1</b><span>صفحة واحدة تجمع كل شيء في أقسام: (أ) البيانات الأساسية بما فيها المنصب <b style="border:none;width:auto;height:auto;display:inline;font-family:inherit;">Assistant / Operator / Supervisor</b> والدرجة، (ب) الوثائق الرسمية، (ب-٢) الشهادات الإلزامية للسلامة <b style="border:none;width:auto;height:auto;display:inline;font-family:inherit;">HSE · H2S · DD (Light/Heavy) · IFR · FA</b>، (ج) الطاقم/الشفت، (د) الشهادات والدورات — كلها برفع ملف وتاريخ انتهاء.</span></div>
+      <div class="anno"><b>2</b><span>القسم (د) يسمح <b style="border:none;width:auto;height:auto;display:inline;font-family:inherit;">برفع ملفات الشهادات/الدورات التي أخذها الموظف</b> — كل صف: الدورة + النتيجة + تاريخ الإصدار + تاريخ الانتهاء + ملف الشهادة، مع زر لإضافة صفوف جديدة.</span></div>
+      <div class="anno"><b>3</b><span>نفس الصفحة تُفتح في وضع «تعديل» لموظف قائم فتظهر الحقول معبّأة والملفات المرفوعة قابلة للاستبدال.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 4 · EMPLOYEE PROFILE ============ -->
+  <section class="frame" id="s4">
+    <div class="frame-head">
+      <span class="frame-no">04</span>
+      <h2 class="frame-title">ملف الموظف</h2>
+      <span class="frame-note">بياناته · وثائقه · الطاقم · شهاداته · درجته · مؤشرات KPI</span>
+    </div>
+    <div class="board">
+      <div class="browser"><span class="dots"><i></i><i></i><i></i></span><span class="urlbar">sgs-system.local / employees / 10241</span></div>
+      <div class="app">
+        <aside class="side">
+          <div class="brand">SGS</div>
+          <span class="nav-i on">الموظفون</span>
+          <span class="nav-i">التدريب والجدارة</span>
+          <span class="nav-i">التنبيهات</span>
+          <span class="nav-i">لوحتي</span>
+        </aside>
+        <div class="main">
+          <div class="crumb">الموظفون / 10241</div>
+          <div class="topbar">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <div class="grade">B</div>
+              <div><div class="h-page" style="font-size:18px;">اسم الموظف</div><div style="font-family:var(--mono); font-size:11px; color:var(--ink-soft);">No. 10241 · Operator</div></div>
+            </div>
+            <div class="row"><a href="#s3" class="btn sm" style="text-decoration:none;">تعديل</a><span class="btn sm ghost">CV.pdf</span></div>
+          </div>
+
+          <div class="grid g-2">
+            <!-- بياناته -->
+            <div class="card">
+              <div class="card-h">البيانات</div>
+              <div class="grid g-2" style="gap:12px;">
+                <div class="kv"><span class="k">الاسم</span><span class="v"><span class="cell-bar w85"></span></span></div>
+                <div class="kv"><span class="k">الرقم الوظيفي</span><span class="v num">10241</span></div>
+                <div class="kv"><span class="k">البريد</span><span class="v"><span class="cell-bar"></span></span></div>
+                <div class="kv"><span class="k">المنصب</span><span class="v">Operator</span></div>
+                <div class="kv"><span class="k">المشروع</span><span class="v"><span class="cell-bar w55"></span></span></div>
+                <div class="kv"><span class="k">الملف الشخصي (CV)</span><span class="v"><span class="btn sm ghost">CV.pdf</span></span></div>
+              </div>
+            </div>
+
+            <!-- درجة الجدارة -->
+            <div class="card">
+              <div class="card-h">درجة الجدارة الحالية</div>
+              <div style="display:flex; align-items:center; gap:16px;">
+                <div class="grade" style="width:52px; height:52px; font-size:22px;">B</div>
+                <div class="kv"><span class="k">المسار</span><span class="v">Operator · C → <b>B</b> → A</span>
+                <span class="k" style="margin-top:6px;">الحالة</span><span class="st"><i class="dot half"></i> مؤهّل جزئياً للترقية إلى A</span></div>
+              </div>
+            </div>
+
+            <!-- الوثائق -->
+            <div class="card">
+              <div class="card-h">الوثائق <span class="tag">EXPIRY</span></div>
+              <div class="tbl-wrap" style="border:none;">
+                <table class="tbl">
+                  <tbody>
+                    <tr><td>الهوية الشخصية</td><td class="num">2027-03-10</td><td><span class="btn sm ghost">رابط</span></td><td><span class="st"><i class="dot full"></i></span></td></tr>
+                    <tr><td>FTW (Fit To Work)</td><td class="num">2026-07-20</td><td><span class="btn sm ghost">رابط</span></td><td><span class="st"><i class="dot empty"></i></span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- الشهادات الإلزامية للسلامة -->
+            <div class="card">
+              <div class="card-h">الشهادات الإلزامية للسلامة <span class="tag">EXPIRY</span></div>
+              <div class="tbl-wrap" style="border:none;">
+                <table class="tbl">
+                  <tbody>
+                    <tr><td>HSE</td><td class="num">2027-02-11</td><td><span class="btn sm ghost">رابط</span></td><td><span class="st"><i class="dot full"></i></span></td></tr>
+                    <tr><td>H2S</td><td class="num">2026-09-30</td><td><span class="btn sm ghost">رابط</span></td><td><span class="st"><i class="dot half"></i></span></td></tr>
+                    <tr><td>DD — Light / Heavy</td><td class="num">2026-12-05</td><td><span class="btn sm ghost">رابط</span></td><td><span class="st"><i class="dot full"></i></span></td></tr>
+                    <tr><td>IFR</td><td class="num">2026-08-18</td><td><span class="btn sm ghost">رابط</span></td><td><span class="st"><i class="dot half"></i></span></td></tr>
+                    <tr><td>FA (First Aid)</td><td class="num">2026-07-15</td><td><span class="btn sm ghost">رابط</span></td><td><span class="st"><i class="dot empty"></i></span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- الطاقم -->
+            <div class="card">
+              <div class="card-h">الطاقم / الشفت</div>
+              <div class="row" style="gap:10px; margin-bottom:12px;">
+                <span class="pill">شفت نهار</span><span class="pill soft">شفت ليل</span>
+              </div>
+              <span class="lbl">تسليم الشفت (Handover)</span>
+              <div style="display:flex; flex-direction:column; gap:7px;">
+                <span class="bar" style="width:100%;"></span><span class="bar" style="width:90%;"></span><span class="bar" style="width:65%;"></span>
+              </div>
+            </div>
+
+            <!-- الشهادات -->
+            <div class="card">
+              <div class="card-h">الشهادات <span class="btn sm ghost">＋ إرفاق شهادة / دورة</span></div>
+              <div class="tbl-wrap" style="border:none;">
+                <table class="tbl">
+                  <thead><tr><th>الشهادة / الدورة</th><th>تاريخ الانتهاء</th><th>الحالة</th></tr></thead>
+                  <tbody>
+                    <tr><td><span class="cell-bar w85"></span></td><td class="num">2027-01-15</td><td><i class="dot full"></i></td></tr>
+                    <tr><td><span class="cell-bar w55"></span></td><td class="num">2026-09-05</td><td><i class="dot half"></i></td></tr>
+                    <tr><td><span class="cell-bar"></span></td><td class="num">2026-06-30</td><td><i class="dot empty"></i></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- KPI -->
+            <div class="card">
+              <div class="card-h">قائمة مؤشرات الأداء (KPI)</div>
+              <div class="kpi"><span>مؤشر خدمة ١</span><span class="meter"><i style="width:82%;"></i></span></div>
+              <div class="kpi"><span>مؤشر خدمة ٢</span><span class="meter"><i style="width:64%;"></i></span></div>
+              <div class="kpi"><span>مؤشر خدمة ٣</span><span class="meter"><i style="width:48%;"></i></span></div>
+              <div class="kpi"><span>مؤشر خدمة ٤</span><span class="meter"><i style="width:73%;"></i></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="anno-wrap">
+      <div class="anno"><b>1</b><span>الملف مقسوم إلى بطاقات مستقلة: البيانات، الدرجة، الوثائق (بتواريخ انتهاء ونقطة حالة)، الطاقم مع الـHandover، الشهادات، ومؤشرات KPI الخاصة بالموظف.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 5 · TRAINING & COMPETENCY ============ -->
+  <section class="frame" id="s5">
+    <div class="frame-head">
+      <span class="frame-no">05</span>
+      <h2 class="frame-title">التدريب والجدارة</h2>
+      <span class="frame-note">صفحة مدمجة: تسجيل + رفع الشهادة · مصفوفة التدريب الإلزامي · معايير C/B/A · مسار الترقية</span>
+    </div>
+    <div class="board">
+      <div class="browser"><span class="dots"><i></i><i></i><i></i></span><span class="urlbar">sgs-system.local / training</span></div>
+      <div class="app">
+        <aside class="side">
+          <div class="brand">SGS</div>
+          <span class="nav-i">الموظفون</span>
+          <span class="nav-i on">التدريب والجدارة</span>
+          <span class="nav-i">التنبيهات</span>
+          <span class="nav-i">لوحتي</span>
+        </aside>
+        <div class="main">
+          <div class="h-page">التدريب والجدارة</div>
+
+          <!-- top: register result + upload certificate -->
+          <div class="card">
+            <div class="card-h">تسجيل نتيجة دورة ورفع الشهادة <span class="tag">FORM</span></div>
+            <div class="grid g-3" style="gap:14px;">
+              <div class="select"><span class="lbl">الموظف <span class="req">*</span></span><div class="input ph">اختر موظفاً…</div></div>
+              <div class="select"><span class="lbl">المنصب</span><div class="input">Assistant / Operator / Supervisor</div></div>
+              <div class="select"><span class="lbl">التدريب / الدورة <span class="req">*</span></span><div class="input ph">اختر التدريب…</div></div>
+              <div class="select"><span class="lbl">النتيجة <span class="req">*</span></span><div class="input">ناجح / راسب</div></div>
+              <div><span class="lbl">تاريخ الإصدار</span><div class="input ph">YYYY-MM-DD</div></div>
+              <div><span class="lbl">تاريخ الانتهاء</span><div class="input ph">يُحسب تلقائياً</div></div>
+            </div>
+            <div style="margin-top:14px;">
+              <span class="lbl">إرفاق ملف الشهادة / الدورة <span class="req">*</span></span>
+              <div class="drop sm">اسحب ملف الشهادة هنا أو اضغط للتصفّح — PDF · JPG · PNG</div>
+            </div>
+            <div class="row" style="justify-content:space-between; align-items:center; margin-top:14px;">
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <span class="lbl" style="margin:0;">التدريبات:</span>
+                <span class="pill soft">HSEI</span><span class="pill soft">H2SI</span><span class="pill soft">AHA</span><span class="pill soft">FWI</span>
+                <span class="pill soft">PTWS</span><span class="pill soft">AGT</span><span class="pill soft">LV</span><span class="pill soft">HV</span>
+                <span class="pill soft">RNB</span><span class="pill soft">OPAL</span><span class="pill soft">IWCF</span>
+              </div>
+              <div class="btn pri">تسجيل ورفع</div>
+            </div>
+            <div class="anno" style="margin-top:14px;"><b>i</b><span>عند «ناجح» تُصدَر شهادة تلقائياً بتاريخ انتهاء، ويُرفَق ملف الشهادة المرفوع، ويُضاف الاثنان إلى ملف الموظف (صفحة 4) وإلى التنبيهات (صفحة 6).</span></div>
+          </div>
+
+          <hr class="section-split">
+
+          <!-- mandatory training matrix -->
+          <div class="subhead">مصفوفة التدريب الإلزامي <span class="mut">— Mandatory Training Matrix · التدريبات المطلوبة لكل وظيفة</span></div>
+          <div class="matrix-wrap">
+            <table class="matrix">
+              <thead>
+                <tr>
+                  <th class="role">الوظيفة</th>
+                  <th>HSEI</th><th>H2SI</th><th>AHA</th><th>FWI</th><th>PTWS</th><th>AGT</th><th>LV</th><th>HV</th><th>RNB</th><th>OPAL</th><th>IWCF</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="role">Assistant <small>مساعد</small></td>
+                  <td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td class="nm">–</td><td class="nm">–</td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td class="nm">–</td>
+                </tr>
+                <tr>
+                  <td class="role">Operator <small>مشغّل</small></td>
+                  <td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td class="nm">–</td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td>
+                </tr>
+                <tr>
+                  <td class="role">Supervisor <small>مشرف</small></td>
+                  <td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td><td><i class="dot full"></i></td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td>
+                </tr>
+                <tr>
+                  <td class="role">Base Manager <small>مدير قاعدة</small></td>
+                  <td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td><td><i class="dot full"></i></td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td>
+                </tr>
+                <tr>
+                  <td class="role">Tool Man <small>فنّي معدّات</small></td>
+                  <td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td><td><i class="dot full"></i></td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td>
+                </tr>
+                <tr>
+                  <td class="role">Gauge Engineer <small>مهندس قياس</small></td>
+                  <td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td class="nm">–</td><td class="nm">–</td><td><i class="dot full"></i></td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td>
+                </tr>
+                <tr>
+                  <td class="role">Mechanic <small>ميكانيكي</small></td>
+                  <td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td class="nm">–</td><td class="nm">–</td><td><i class="dot full"></i></td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td>
+                </tr>
+                <tr>
+                  <td class="role">HSE Advisor <small>مستشار سلامة</small></td>
+                  <td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td class="nm">–</td><td><i class="dot full"></i></td><td><i class="dot full"></i></td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td><td class="nm">–</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card" style="margin-top:12px;">
+            <div class="card-h">دليل اختصارات التدريب <span class="tag"><i class="dot full" style="vertical-align:-1px;"></i> = مطلوب</span></div>
+            <div class="leg-grid">
+              <div class="leg-row"><span class="c">HSEI</span><span class="m">OPAL HSE Induction</span></div>
+              <div class="leg-row"><span class="c">H2SI</span><span class="m">H2S &amp; SO2 Awareness and Escape</span></div>
+              <div class="leg-row"><span class="c">AHA</span><span class="m">AHA Heartsaver / First Aid</span></div>
+              <div class="leg-row"><span class="c">FWI</span><span class="m">Fire Warden &amp; Fire Extinguisher</span></div>
+              <div class="leg-row"><span class="c">PTWS</span><span class="m">Permit to Work Signatories</span></div>
+              <div class="leg-row"><span class="c">AGT</span><span class="m">Authorised Gas Tester</span></div>
+              <div class="leg-row"><span class="c">LV</span><span class="m">Defensive Driving Blacktop – Light Vehicle</span></div>
+              <div class="leg-row"><span class="c">HV</span><span class="m">Defensive Driving Blacktop – Heavy Goods Vehicle</span></div>
+              <div class="leg-row"><span class="c">RNB</span><span class="m">Riggers &amp; Banksmen</span></div>
+              <div class="leg-row"><span class="c">OPAL</span><span class="m">Mobile Crane Operator</span></div>
+              <div class="leg-row"><span class="c">IWCF</span><span class="m">IWCF — Well Control</span></div>
+            </div>
+          </div>
+
+          <hr class="section-split">
+
+          <!-- grade criteria rubric -->
+          <div class="subhead">معايير الدرجات C / B / A <span class="mut">— حسب إكمال التدريب + سنوات الخبرة العملية بالمنصب</span></div>
+          <div class="rubric">
+            <div class="rub">
+              <div class="rub-h"><span class="grade out">C</span><span class="t">أساسي — Basic</span></div>
+              <div class="rub-c"><span class="k">التدريب</span><span class="v">أكمل التدريبات الأساسية / الإلزامية فقط (Mandatory / Basic).</span></div>
+              <div class="rub-c"><span class="k">سنوات الخبرة</span><span class="v">أقل من سنة في المنصب.</span></div>
+            </div>
+            <div class="rub">
+              <div class="rub-h"><span class="grade out">B</span><span class="t">متوسط — Intermediate</span></div>
+              <div class="rub-c"><span class="k">التدريب</span><span class="v">أكمل التدريبات المتوسطة + خبرة عملية مثبتة.</span></div>
+              <div class="rub-c"><span class="k">سنوات الخبرة</span><span class="v">من ١ إلى ٣ سنوات في المنصب.</span></div>
+            </div>
+            <div class="rub">
+              <div class="rub-h"><span class="grade">A</span><span class="t">متقدّم — Advanced</span></div>
+              <div class="rub-c"><span class="k">التدريب</span><span class="v">أكمل كل التدريبات المتقدمة + مؤهّل لتدريب غيره.</span></div>
+              <div class="rub-c"><span class="k">سنوات الخبرة</span><span class="v">أكثر من ٣ سنوات في المنصب.</span></div>
+            </div>
+          </div>
+          <div class="anno" style="margin-top:12px;"><b>i</b><span>الترقية لأي درجة تشترط استيفاء المعيارين معاً: (١) إكمال التدريبات المطلوبة للوظيفة من المصفوفة أعلاه بشهادات سارية، و(٢) بلوغ سنوات الخبرة المحدّدة للدرجة.</span></div>
+
+          <hr class="section-split">
+
+          <!-- bottom: promotion ladders -->
+          <div class="subhead">مسار الترقية <span class="mut">— شرط كل درجة: إكمال دوراتها + النجاح فيها + شهادة سارية</span></div>
+          <div class="ladders">
+            <div class="ladder">
+              <h5>Assistant</h5>
+              <div class="track"><span class="node done">C</span><span class="arrow"></span><span class="node">B</span><span class="arrow"></span><span class="node">A</span></div>
+              <small>يبدأ من C</small>
+            </div>
+            <div class="ladder">
+              <h5>Operator</h5>
+              <div class="track"><span class="node done">C</span><span class="arrow"></span><span class="node done">B</span><span class="arrow"></span><span class="node">A</span></div>
+              <small>يبدأ من C</small>
+            </div>
+            <div class="ladder">
+              <h5>Supervisor</h5>
+              <div class="track"><span class="node done">B</span><span class="arrow"></span><span class="node">A</span></div>
+              <small>يبدأ من B</small>
+            </div>
+          </div>
+
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>الموظف</th><th>المسار</th><th>الدرجة الحالية</th><th>الدرجة التالية</th><th>الحالة</th></tr></thead>
+              <tbody>
+                <tr><td><span class="cell-bar w85"></span></td><td>Operator</td><td><span class="pill">B</span></td><td><span class="pill soft">A</span></td><td><span class="st"><i class="dot full"></i> ✔ مؤهّل للترقية</span></td></tr>
+                <tr><td><span class="cell-bar w55"></span></td><td>Assistant</td><td><span class="pill">C</span></td><td><span class="pill soft">B</span></td><td><span class="st"><i class="dot half"></i> ناقصه: دورة السلامة</span></td></tr>
+                <tr><td><span class="cell-bar"></span></td><td>Supervisor</td><td><span class="pill">B</span></td><td><span class="pill soft">A</span></td><td><span class="st"><i class="dot empty"></i> شهادة منتهية — تجديد مطلوب</span></td></tr>
+                <tr><td><span class="cell-bar w85"></span></td><td>Operator</td><td><span class="pill">C</span></td><td><span class="pill soft">B</span></td><td><span class="st"><i class="dot half"></i> ناقصه: دورتان</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="anno-wrap">
+      <div class="anno"><b>1</b><span>الصفحة مدمجة بأربعة أقسام متتالية: (١) تسجيل نتيجة دورة ورفع الشهادة، (٢) مصفوفة التدريب الإلزامي التي تحدّد التدريبات المطلوبة لكل وظيفة، (٣) معايير الدرجات C/B/A حسب التدريب وسنوات الخبرة، (٤) مسار الترقية مع جدول يبيّن لكل موظف درجته وما ينقصه.</span></div>
+      <div class="anno"><b>2</b><span>المصفوفة قابلة للتمرير أفقياً (١١ تدريباً × ٨ وظائف)؛ النقطة الممتلئة تعني «مطلوب»، والشرطة تعني «غير مطلوب» لتلك الوظيفة.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 6 · ALERTS ============ -->
+  <section class="frame" id="s6">
+    <div class="frame-head">
+      <span class="frame-no">06</span>
+      <h2 class="frame-title">التنبيهات</h2>
+      <span class="frame-note">كل الوثائق والشهادات القريبة من الانتهاء أو المنتهية، من كل الموظفين، مرتّبة من الأقرب</span>
+    </div>
+    <div class="board">
+      <div class="browser"><span class="dots"><i></i><i></i><i></i></span><span class="urlbar">sgs-system.local / alerts</span></div>
+      <div class="app">
+        <aside class="side">
+          <div class="brand">SGS</div>
+          <span class="nav-i">الموظفون</span>
+          <span class="nav-i">التدريب والجدارة</span>
+          <span class="nav-i on">التنبيهات</span>
+          <span class="nav-i">لوحتي</span>
+        </aside>
+        <div class="main">
+          <div class="h-page">التنبيهات</div>
+
+          <div class="grid g-3">
+            <div class="stat"><span class="n">3</span><span class="t">منتهية فعلاً</span></div>
+            <div class="stat"><span class="n">7</span><span class="t">تنتهي خلال ٣٠ يوم</span></div>
+            <div class="stat"><span class="n">12</span><span class="t">تنتهي خلال ٩٠ يوم</span></div>
+          </div>
+
+          <div class="filters">
+            <div class="fx select"><span class="lbl">نوع الوثيقة</span><div class="input">الكل</div></div>
+            <div class="fx select"><span class="lbl">الحالة</span><div class="input">منتهٍ / قريب</div></div>
+            <div class="fx select"><span class="lbl">المشروع</span><div class="input">الكل</div></div>
+          </div>
+
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>الموظف</th><th>الرقم</th><th>نوع الوثيقة</th><th>تاريخ الانتهاء</th><th>المتبقّي</th><th>الحالة</th></tr></thead>
+              <tbody>
+                <tr><td><span class="cell-bar w55"></span></td><td class="num">10243</td><td>FTW</td><td class="num">2026-06-30</td><td class="num">−6 يوم</td><td><span class="st"><i class="dot empty"></i> منتهٍ</span></td></tr>
+                <tr><td><span class="cell-bar w85"></span></td><td class="num">10242</td><td>الهوية</td><td class="num">2026-07-04</td><td class="num">2 يوم</td><td><span class="st"><i class="dot empty"></i> منتهٍ قريباً</span></td></tr>
+                <tr><td><span class="cell-bar w40"></span></td><td class="num">10241</td><td>FA (سلامة)</td><td class="num">2026-07-15</td><td class="num">9 يوم</td><td><span class="st"><i class="dot half"></i> قريب</span></td></tr>
+                <tr><td><span class="cell-bar"></span></td><td class="num">10241</td><td>FTW (Fit To Work)</td><td class="num">2026-07-20</td><td class="num">14 يوم</td><td><span class="st"><i class="dot half"></i> قريب</span></td></tr>
+                <tr><td><span class="cell-bar w85"></span></td><td class="num">10244</td><td>IFR (سلامة)</td><td class="num">2026-08-18</td><td class="num">43 يوم</td><td><span class="st"><i class="dot half"></i> قريب</span></td></tr>
+                <tr><td><span class="cell-bar w55"></span></td><td class="num">10245</td><td>شهادة دورة</td><td class="num">2026-08-05</td><td class="num">30 يوم</td><td><span class="st"><i class="dot half"></i> قريب</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="anno-wrap">
+      <div class="anno"><b>1</b><span>الجدول يجمّع كل الأنواع (هوية · FTW · شهادات السلامة الإلزامية HSE/H2S/DD/IFR/FA · شهادات الدورات) لكل الموظفين في مكان واحد، مرتّبة تصاعدياً حسب الأقرب انتهاءً؛ بطاقات علوية تلخّص الأعداد.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 7 · USER DASHBOARD ============ -->
+  <section class="frame" id="s7">
+    <div class="frame-head">
+      <span class="frame-no">07</span>
+      <h2 class="frame-title">لوحة المستخدم</h2>
+      <span class="frame-note">نفس الصفحة تتغيّر حسب الدور — عرضان: موظف / مشرف</span>
+    </div>
+
+    <!-- 6a employee -->
+    <div class="board" style="margin-bottom:22px;">
+      <div class="browser"><span class="dots"><i></i><i></i><i></i></span><span class="urlbar">sgs-system.local / me · (role: employee)</span></div>
+      <div class="app">
+        <aside class="side">
+          <div class="brand">SGS</div>
+          <span class="nav-i on">لوحتي</span>
+          <span class="nav-i">شهاداتي</span>
+        </aside>
+        <div class="main">
+          <span class="role-tab">VIEW · موظف</span>
+          <div class="topbar">
+            <div style="display:flex; align-items:center; gap:12px;"><div class="grade">B</div><div class="h-page" style="font-size:17px;">مرحباً، اسم الموظف</div></div>
+            <span class="pill">درجتي: B</span>
+          </div>
+
+          <div class="grid g-2">
+            <div class="card">
+              <div class="card-h">مهامي</div>
+              <div class="kpi"><span><i class="dot empty" style="border-radius:3px;"></i> &nbsp;مهمة اليوم — شفت نهار</span><span class="pill soft">اليوم</span></div>
+              <div class="kpi"><span><i class="dot empty" style="border-radius:3px;"></i> &nbsp;تسليم الشفت (Handover)</span><span class="pill soft">مساءً</span></div>
+              <div class="kpi"><span><i class="dot empty" style="border-radius:3px;"></i> &nbsp;تجديد FTW</span><span class="pill">عاجل</span></div>
+            </div>
+            <div class="card">
+              <div class="card-h">شهاداتي <span class="tag">EXPIRY</span></div>
+              <div class="tbl-wrap" style="border:none;">
+                <table class="tbl"><tbody>
+                  <tr><td><span class="cell-bar w85"></span></td><td class="num">2027-01-15</td><td><i class="dot full"></i></td></tr>
+                  <tr><td><span class="cell-bar w55"></span></td><td class="num">2026-09-05</td><td><i class="dot half"></i></td></tr>
+                  <tr><td>FTW</td><td class="num">2026-07-20</td><td><i class="dot empty"></i></td></tr>
+                </tbody></table>
+              </div>
+            </div>
+            <div class="card" style="grid-column:1 / -1;">
+              <div class="card-h">مؤشرات KPI الخاصة بي</div>
+              <div class="grid g-4">
+                <div class="kpi" style="flex-direction:column; align-items:flex-start; gap:8px; border:none;"><span>مؤشر ١</span><span class="meter" style="width:100%;"><i style="width:82%;"></i></span></div>
+                <div class="kpi" style="flex-direction:column; align-items:flex-start; gap:8px; border:none;"><span>مؤشر ٢</span><span class="meter" style="width:100%;"><i style="width:64%;"></i></span></div>
+                <div class="kpi" style="flex-direction:column; align-items:flex-start; gap:8px; border:none;"><span>مؤشر ٣</span><span class="meter" style="width:100%;"><i style="width:48%;"></i></span></div>
+                <div class="kpi" style="flex-direction:column; align-items:flex-start; gap:8px; border:none;"><span>مؤشر ٤</span><span class="meter" style="width:100%;"><i style="width:73%;"></i></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6b supervisor -->
+    <div class="board">
+      <div class="browser"><span class="dots"><i></i><i></i><i></i></span><span class="urlbar">sgs-system.local / me · (role: supervisor)</span></div>
+      <div class="app">
+        <aside class="side">
+          <div class="brand">SGS</div>
+          <span class="nav-i on">لوحتي</span>
+          <span class="nav-i">فريقي</span>
+          <span class="nav-i">الجدول الشهري</span>
+        </aside>
+        <div class="main">
+          <span class="role-tab">VIEW · مشرف</span>
+          <div class="topbar">
+            <div class="h-page" style="font-size:17px;">فريقي</div>
+            <div class="row"><span class="pill soft">٨ أعضاء</span><span class="pill">٢ تنبيه</span><a href="#s8" class="btn sm" style="text-decoration:none;">الجدول الشهري ↩</a></div>
+          </div>
+
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>عضو الفريق</th><th>الرقم</th><th>المنصب</th><th>الدرجة</th><th>الوثائق</th><th>KPI</th><th></th></tr></thead>
+              <tbody>
+                <tr><td><span class="cell-bar w85"></span></td><td class="num">10241</td><td>Operator</td><td><span class="pill">B</span></td><td><i class="dot half"></i></td><td><span class="meter" style="display:inline-block; vertical-align:middle;"><i style="width:82%;"></i></span></td><td><span class="btn sm">عرض</span></td></tr>
+                <tr><td><span class="cell-bar w55"></span></td><td class="num">10242</td><td>Assistant</td><td><span class="pill">C</span></td><td><i class="dot empty"></i></td><td><span class="meter" style="display:inline-block; vertical-align:middle;"><i style="width:54%;"></i></span></td><td><span class="btn sm">عرض</span></td></tr>
+                <tr><td><span class="cell-bar"></span></td><td class="num">10245</td><td>Assistant</td><td><span class="pill">C</span></td><td><i class="dot full"></i></td><td><span class="meter" style="display:inline-block; vertical-align:middle;"><i style="width:70%;"></i></span></td><td><span class="btn sm">عرض</span></td></tr>
+                <tr><td><span class="cell-bar w85"></span></td><td class="num">10244</td><td>Operator</td><td><span class="pill">B</span></td><td><i class="dot full"></i></td><td><span class="meter" style="display:inline-block; vertical-align:middle;"><i style="width:61%;"></i></span></td><td><span class="btn sm">عرض</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="anno-wrap">
+      <div class="anno"><b>1</b><span>نفس المسار <span style="font-family:var(--mono);">/me</span> يعرض محتوى مختلفاً حسب الدور: الموظف يرى مهامه وشهاداته ودرجته ومؤشراته؛ المشرف يرى فريقه كاملاً بنفس التفاصيل مع إمكانية فتح ملف كل عضو.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 8 · MONTHLY ROTATIONAL SCHEDULE ============ -->
+  <section class="frame" id="s8">
+    <div class="frame-head">
+      <span class="frame-no">08</span>
+      <h2 class="frame-title">الجدول الشهري للشفتات</h2>
+      <span class="frame-note">Monthly Rotational Schedule — المشرف يعبّي ويعدّل حالة كل موظف يومياً بالرموز</span>
+    </div>
+    <div class="board">
+      <div class="browser"><span class="dots"><i></i><i></i><i></i></span><span class="urlbar">sgs-system.local / schedule</span></div>
+      <div class="app">
+        <aside class="side">
+          <div class="brand">SGS</div>
+          <span class="nav-i">الموظفون</span>
+          <span class="nav-i">التدريب والجدارة</span>
+          <span class="nav-i">التنبيهات</span>
+          <span class="nav-i on">الجدول الشهري</span>
+          <span class="nav-i">لوحتي</span>
+        </aside>
+        <div class="main">
+          <span class="role-tab">EDIT · مشرف فقط</span>
+          <div class="topbar">
+            <div class="h-page">الجدول الشهري للشفتات</div>
+            <div class="row">
+              <span class="btn sm ghost">◄ يوليو 2026 ►</span>
+              <span class="btn sm ghost">المشروع / الموقع</span>
+              <span class="btn sm">تصدير</span>
+              <span class="btn sm pri">حفظ</span>
+            </div>
+          </div>
+
+          <!-- code palette (supervisor picks a code, then fills a cell) -->
+          <div class="card">
+            <div class="card-h">لوحة الرموز <span class="tag">اختر رمزاً ثم املأ الخلية</span></div>
+            <div class="codes">
+              <span class="code on">F</span><span class="code">OFF</span><span class="code">V</span><span class="code">AI</span>
+              <span class="code">EM</span><span class="code">S</span><span class="code">PT</span><span class="code">MT</span>
+              <span class="code">Mr</span><span class="code">HL</span><span class="code">Ex</span><span class="code">T</span>
+            </div>
+          </div>
+
+          <!-- the grid -->
+          <div class="sched-wrap">
+            <table class="sched">
+              <thead>
+                <tr>
+                  <th class="emp">الموظف</th>
+                  <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
+                  <th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th>
+                  <th>← 31</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="emp"><b>اسم الموظف</b><small><span class="r-tag">Op</span> · No.10241</small></td>
+                  <td class="cell">F</td><td class="cell">F</td><td class="cell">F</td><td class="cell off">OFF</td><td class="cell off">OFF</td><td class="cell">F</td><td class="cell">F</td>
+                  <td class="cell">F</td><td class="cell">F</td><td class="cell off">OFF</td><td class="cell lv">V</td><td class="cell lv">V</td><td class="cell lv">V</td><td class="cell">F</td>
+                  <td class="cell off">…</td>
+                </tr>
+                <tr>
+                  <td class="emp"><b>اسم الموظف</b><small><span class="r-tag">As</span> · No.10242</small></td>
+                  <td class="cell off">OFF</td><td class="cell">F</td><td class="cell">F</td><td class="cell">F</td><td class="cell">F</td><td class="cell off">OFF</td><td class="cell off">OFF</td>
+                  <td class="cell">F</td><td class="cell">F</td><td class="cell">F</td><td class="cell">F</td><td class="cell lv">S</td><td class="cell lv">S</td><td class="cell">F</td>
+                  <td class="cell off">…</td>
+                </tr>
+                <tr>
+                  <td class="emp"><b>اسم الموظف</b><small><span class="r-tag">Sup</span> · No.10243</small></td>
+                  <td class="cell">F</td><td class="cell">F</td><td class="cell off">OFF</td><td class="cell">F</td><td class="cell">F</td><td class="cell">F</td><td class="cell">F</td>
+                  <td class="cell off">OFF</td><td class="cell off">OFF</td><td class="cell">F</td><td class="cell">F</td><td class="cell">F</td><td class="cell">F</td><td class="cell">F</td>
+                  <td class="cell off">…</td>
+                </tr>
+                <tr>
+                  <td class="emp"><b>اسم الموظف</b><small><span class="r-tag">Op</span> · No.10244</small></td>
+                  <td class="cell">F</td><td class="cell off">OFF</td><td class="cell off">OFF</td><td class="cell">F</td><td class="cell">F</td><td class="cell lv">AI</td><td class="cell lv">AI</td>
+                  <td class="cell lv">AI</td><td class="cell lv">AI</td><td class="cell off">OFF</td><td class="cell">F</td><td class="cell">F</td><td class="cell">F</td><td class="cell">F</td>
+                  <td class="cell off">…</td>
+                </tr>
+                <tr>
+                  <td class="emp"><b>اسم الموظف</b><small><span class="r-tag">As</span> · No.10245</small></td>
+                  <td class="cell lv">T</td><td class="cell">F</td><td class="cell">F</td><td class="cell">F</td><td class="cell off">OFF</td><td class="cell off">OFF</td><td class="cell">F</td>
+                  <td class="cell">F</td><td class="cell lv">EM</td><td class="cell">F</td><td class="cell">F</td><td class="cell off">OFF</td><td class="cell">F</td><td class="cell">F</td>
+                  <td class="cell off">…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- legend + roles -->
+          <div class="grid g-2">
+            <div class="card">
+              <div class="card-h">الرموز ومعانيها</div>
+              <div class="leg-grid">
+                <div class="leg-row"><span class="c">OA / OFF</span><span class="m">راحة (Off)</span></div>
+                <div class="leg-row"><span class="c">F</span><span class="m">على رأس العمل (On duty)</span></div>
+                <div class="leg-row"><span class="c">V</span><span class="m">إجازة (Vacation)</span></div>
+                <div class="leg-row"><span class="c">AI</span><span class="m">إجازة سنوية (Annual leave)</span></div>
+                <div class="leg-row"><span class="c">EM</span><span class="m">إجازة طارئة (Emergency leave)</span></div>
+                <div class="leg-row"><span class="c">S</span><span class="m">إجازة مرضية (Sick leave)</span></div>
+                <div class="leg-row"><span class="c">PT</span><span class="m">إجازة أبوّة (Paternity leave)</span></div>
+                <div class="leg-row"><span class="c">MT</span><span class="m">إجازة أمومة (Maternity leave)</span></div>
+                <div class="leg-row"><span class="c">Mr</span><span class="m">إجازة زواج (Marriage leave)</span></div>
+                <div class="leg-row"><span class="c">HL</span><span class="m">إجازة حج (Hajj leave)</span></div>
+                <div class="leg-row"><span class="c">Ex</span><span class="m">يوم إضافي (Extra day)</span></div>
+                <div class="leg-row"><span class="c">T</span><span class="m">تدريب في يوم الراحة (Training on off day)</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-h">الأدوار</div>
+              <div class="leg-row"><span class="c">As</span><span class="m">مساعد (Assistant)</span></div>
+              <div class="leg-row"><span class="c">Op</span><span class="m">مشغّل (Operator)</span></div>
+              <div class="leg-row"><span class="c">Sup</span><span class="m">مشرف (Supervisor)</span></div>
+              <div class="anno" style="margin-top:14px;"><b>i</b><span>عرض الجدول متاح للجميع، أما التعبئة والتعديل فمحصور بدور المشرف؛ كل خلية = حالة يوم واحد لموظف واحد.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="anno-wrap">
+      <div class="anno"><b>1</b><span>يختار المشرف الشهر والموقع، ثم يضغط رمزاً من «لوحة الرموز» ويملأ خلايا الأيام — الجدول قابل للتمرير أفقياً حتى نهاية الشهر (٣٠/٣١ يوم).</span></div>
+      <div class="anno"><b>2</b><span>الصفوف موظفون بأدوارهم (As / Op / Sup)؛ الإجازات (V · AI · S · EM …) والراحات (OFF) مميّزة بخلفية أفتح لتُقرأ بسرعة، وتتكامل مع سجلّ إجازات الموظف.</span></div>
+    </div>
+  </section>
+
+  <div class="foot">SGS · Wireframes v4 · ٨ صفحات + مصفوفة التدريب الإلزامي · أبيض/أسود · بدون أيقونات · للمراجعة قبل البناء</div>
+
+</div>

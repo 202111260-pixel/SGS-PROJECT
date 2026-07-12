@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: oklch(96.5% 0.012 85);
+  --color-sand: oklch(92.5% 0.022 80);
+  --color-sand-deep: oklch(88% 0.028 78);
+  --color-ink: oklch(24.5% 0.02 55);
+  --color-ink-soft: oklch(42% 0.018 55);
+  --color-copper: oklch(58% 0.13 45);
+  --color-copper-deep: oklch(42% 0.11 45);
+  --color-palm: oklch(46% 0.06 160);
+  --color-ivory: oklch(97.5% 0.01 85);
+
+  /* Dashboard surfaces */
+  --color-canvas: oklch(94.5% 0.014 80);
+  --color-card: oklch(99% 0.006 85);
+  --color-hair: oklch(24.5% 0.02 55 / 0.09);
+
+  /* Chart palette: muted, warm-leaning, on-brand */
+  --color-chart-1: oklch(62% 0.14 45);
+  --color-chart-2: oklch(55% 0.07 160);
+  --color-chart-3: oklch(74% 0.11 80);
+  --color-chart-4: oklch(60% 0.06 220);
+  --color-chart-5: oklch(60% 0.1 25);
+
+  --color-pos: oklch(52% 0.11 155);
+  --color-warn: oklch(64% 0.13 65);
+
+  --font-display: "Zodiak", Georgia, "Times New Roman", serif;
+  --font-sans: "Switzer", system-ui, -apple-system, sans-serif;
+}
+
+html {
+  background: var(--color-paper);
+  scroll-behavior: auto;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-paper);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--color-copper);
+  color: var(--color-ivory);
+}
+
+/* Cinematic grain over everything, outside the smooth-scroll content */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* SplitText line wrappers: give descenders room inside the clipping mask */
+.split-line {
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
+/* Eyebrow label */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.eyebrow::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--color-copper);
+}
+
+/* Pill buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 999px;
+  padding: 1rem 1.75rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1;
+  transition: background-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.btn .arrow {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.btn:hover .arrow {
+  transform: translateX(0.3rem);
+}
+
+/* Partner marquee */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
