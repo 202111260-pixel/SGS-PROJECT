@@ -1,0 +1,62 @@
+/*
+  Competency page extras — scoped to `.comp-page`, layered on top of the
+  registry tokens (dashboard.css) and the premium form skin (employee-form.css,
+  which supplies ambient washes, wells, avatar, glass bar and copper buttons).
+*/
+
+/* ── What-if tenure slider — copper track fill driven by --fill ── */
+.comp-page input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border: none;
+  border-radius: 999px;
+  background:
+    linear-gradient(to right, var(--color-sgs) var(--fill, 0%), var(--color-paper-3) var(--fill, 0%));
+  cursor: pointer;
+}
+.comp-page input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--color-sgs-bright), var(--color-sgs));
+  border: 2px solid var(--color-paper);
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.3), 0 0 0 1px var(--color-rule);
+}
+.comp-page input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--color-sgs-bright), var(--color-sgs));
+  border: 2px solid var(--color-paper);
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.3), 0 0 0 1px var(--color-rule);
+}
+
+/* ── Promotion runway: the next grade node breathes ── */
+@keyframes comp-pulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-sgs) 35%, transparent); }
+  100% { box-shadow: 0 0 0 14px transparent; }
+}
+.comp-page .comp-next-pulse { animation: comp-pulse 1.9s var(--ease) infinite; }
+
+/* ── Missing-certificate ghost cards: faint diagonal hatching ── */
+.comp-page .comp-ghost {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 10px,
+    color-mix(in oklab, var(--color-ink) 3.5%, transparent) 10px 11px
+  );
+}
+
+/* Cards overridden inside the simulator get a copper dashed halo. */
+.comp-page .comp-simmed {
+  outline: 2px dashed color-mix(in oklab, var(--color-sgs) 55%, transparent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comp-page .comp-next-pulse { animation: none; }
+}

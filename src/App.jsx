@@ -10,6 +10,7 @@ const DeepAnalytics = lazy(() =>
   import('./pages/Dashboard').then((m) => ({ default: m.DeepAnalytics })),
 )
 const EmployeeForm = lazy(() => import('./pages/EmployeeForm'))
+const Competency = lazy(() => import('./pages/Competency'))
 
 // Warm paper hold while a route chunk streams in — no white flash, no spinner.
 function RouteFallback() {
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/dashboard/analytics" element={<DeepAnalytics />} />
         <Route path="/employees/new" element={<EmployeeForm mode="new" />} />
         <Route path="/employees/:id/edit" element={<EmployeeForm mode="edit" />} />
+        <Route path="/training" element={<Competency />} />
       </Routes>
     </Suspense>
   )

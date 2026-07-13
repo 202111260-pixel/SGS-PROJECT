@@ -184,7 +184,7 @@ function TopBar({
     { label: 'Overview', to: '/dashboard' },
     { label: 'Analytics', to: '/dashboard/analytics' },
     { label: 'Employees', to: '/employees/new' },
-    { label: 'Courses' },
+    { label: 'Training', to: '/training' },
     { label: 'Trainees' },
   ];
 
@@ -268,7 +268,7 @@ function Rail() {
   const items: Array<{ i: string; active?: boolean; to?: string; label: string }> = [
     { i: 'home',   active: true, to: '/dashboard', label: 'Dashboard' },
     { i: 'people', to: '/employees/new', label: 'Employees' },
-    { i: 'book', label: 'Courses' },
+    { i: 'book', to: '/training', label: 'Training & Competency' },
     { i: 'shield', label: 'Compliance' },
     { i: 'chart', to: '/dashboard/analytics', label: 'Analytics' },
     { i: 'globe', label: 'Deployments' },
@@ -1366,14 +1366,14 @@ function RenewalsCountdown() {
    ════════════════════════════════════════════════════════════════════ */
 
 const activityRows: Array<[string, string, string, string, string, string, 'Pass' | 'Retake' | 'New']> = [
-  ['07.05.2026', '14:08:22Z', 'N. Al-Hinai',     'ISO 17025 · M14',  'Muscat',   '96.4%', 'Pass'],
-  ['07.05.2026', '13:51:04Z', 'F. Al-Balushi',   'API 510 · M02',    'Sohar',    '92.1%', 'Pass'],
-  ['07.05.2026', '13:18:39Z', 'M. Al-Riyami',    'IATF 16949 · M11', 'Muscat',   '94.2%', 'Pass'],
-  ['07.05.2026', '12:46:11Z', 'S. Al-Lawati',    'ISO 17020 · M07',  'Duqm',     '91.6%', 'Pass'],
-  ['07.05.2026', '11:30:55Z', 'R. Al-Habsi',     'NACE CIP-2 · M03', 'Salalah',  '64.0%', 'Retake'],
-  ['07.05.2026', '10:14:08Z', 'A. Al-Saadi',     'GSO PVoC · M05',   'Muscat',   '89.3%', 'Pass'],
-  ['07.05.2026', '09:02:43Z', 'K. Al-Zadjali',   'PDO HSE · M02',    'Sohar',    '92.1%', 'Pass'],
-  ['07.05.2026', '08:38:17Z', 'H. Al-Maskari',   'API 570 · M01',    'Duqm',     '—',      'New'],
+  ['12.07.2026', '14:08:22Z', 'N. Al-Hinai',     'ISO 17025 · M14',  'Muscat',   '96.4%', 'Pass'],
+  ['12.07.2026', '13:51:04Z', 'F. Al-Balushi',   'API 510 · M02',    'Sohar',    '92.1%', 'Pass'],
+  ['12.07.2026', '13:18:39Z', 'M. Al-Riyami',    'IATF 16949 · M11', 'Muscat',   '94.2%', 'Pass'],
+  ['12.07.2026', '12:46:11Z', 'S. Al-Lawati',    'ISO 17020 · M07',  'Duqm',     '91.6%', 'Pass'],
+  ['11.07.2026', '11:30:55Z', 'R. Al-Habsi',     'NACE CIP-2 · M03', 'Salalah',  '64.0%', 'Retake'],
+  ['11.07.2026', '10:14:08Z', 'A. Al-Saadi',     'GSO PVoC · M05',   'Muscat',   '89.3%', 'Pass'],
+  ['11.07.2026', '09:02:43Z', 'K. Al-Zadjali',   'PDO HSE · M02',    'Sohar',    '92.1%', 'Pass'],
+  ['11.07.2026', '08:38:17Z', 'H. Al-Maskari',   'API 570 · M01',    'Duqm',     '—',      'New'],
 ];
 
 function ActivityLedger() {

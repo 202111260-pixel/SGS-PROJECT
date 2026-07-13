@@ -1,7 +1,8 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import Wordmark from '../components/Wordmark';
+import RotatingText from '../components/RotatingText';
 import './dashboard.css';
 import './employee-form.css';
 
@@ -39,15 +40,26 @@ const PROJECTS = ['OQ', 'Oxy Oman'] as const;
 type Position = (typeof POSITIONS)[number];
 type Grade = (typeof GRADES)[number];
 
-type DocKey = 'nationalId' | 'ftw';
-type SafetyKey = 'hse' | 'h2s' | 'ddLight' | 'ddHeavy' | 'ifr' | 'fa';
+/** Only these field-operations roles carry the C → B → A promotion ladder;
+ *  every other position is recorded without a grade. */
+const GRADED_POSITIONS = ['Assistant', 'Operator', 'Supervisor'] as const;
+const GRADE_LADDER = ['C', 'B', 'A'] as const; // entry → advanced, left to right
+const GRADE_TIER: Record<Grade, string> = { C: 'Entry', B: 'Intermediate', A: 'Advanced' };
+function hasGradeLadder(p: Position | ''): boolean {
+  return (GRADED_POSITIONS as readonly string[]).includes(p);
+}
+
+type DocKey = 'nationalId';
+type SafetyKey = 'ftw' | 'hse' | 'h2s' | 'ddLight' | 'ddHeavy' | 'ifr' | 'fa';
 
 const OFFICIAL_DOCS: ReadonlyArray<{ key: DocKey; label: string; placeholder: string }> = [
   { key: 'nationalId', label: 'National ID', placeholder: 'id-card.pdf' },
-  { key: 'ftw', label: 'FTW (Fit To Work)', placeholder: 'ftw.pdf' },
 ];
 
+// FTW (Fit To Work) leads the mandatory safety block — it's the medical
+// clearance every field-operations cert sits behind.
 const SAFETY_CERTS: ReadonlyArray<{ key: SafetyKey; label: string; hint?: string; placeholder: string }> = [
+  { key: 'ftw', label: 'FTW (Fit To Work)', hint: 'Fitness-to-work medical', placeholder: 'ftw.pdf' },
   { key: 'hse', label: 'HSE', placeholder: 'hse.pdf' },
   { key: 'h2s', label: 'H2S', placeholder: 'h2s.pdf' },
   { key: 'ddLight', label: 'DD — Light', hint: 'Defensive Driving', placeholder: 'dd-light.pdf' },
@@ -68,16 +80,18 @@ type FormState = {
   grade: Grade | '';
   hireDate: string;
   cv: string;
+  /** Data URL of the chosen profile photo, or '' for none (initials fallback). */
+  photo: string;
   docs: Record<DocKey, DocState>;
   safety: Record<SafetyKey, DocState>;
 };
 
 const emptyDocs = (): Record<DocKey, DocState> => ({
   nationalId: { name: '', expiry: '' },
-  ftw: { name: '', expiry: '' },
 });
 
 const emptySafety = (): Record<SafetyKey, DocState> => ({
+  ftw: { name: '', expiry: '' },
   hse: { name: '', expiry: '' },
   h2s: { name: '', expiry: '' },
   ddLight: { name: '', expiry: '' },
@@ -96,6 +110,7 @@ const blankForm = (): FormState => ({
   grade: '',
   hireDate: '',
   cv: '',
+  photo: '',
   docs: emptyDocs(),
   safety: emptySafety(),
 });
@@ -113,11 +128,12 @@ const SAMPLE_EMPLOYEE: FormState = {
   grade: 'B',
   hireDate: '2022-01-24',
   cv: 'CV.pdf',
+  photo: '',
   docs: {
     nationalId: { name: 'id-card.pdf', expiry: '2027-03-10' },
-    ftw: { name: 'ftw.pdf', expiry: '2026-07-20' },
   },
   safety: {
+    ftw: { name: 'ftw.pdf', expiry: '2026-07-20' },
     hse: { name: 'hse.pdf', expiry: '2027-02-11' },
     h2s: { name: 'h2s.pdf', expiry: '2026-09-30' },
     ddLight: { name: 'dd-light.pdf', expiry: '2026-12-05' },
@@ -144,6 +160,15 @@ function validate(f: FormState): Errors {
 
 const TOTAL_DOCS = OFFICIAL_DOCS.length + SAFETY_CERTS.length;
 
+const REQUIRED_KEYS = ['fullName', 'employeeNo', 'email', 'position', 'project'] as const;
+
+/** "MP" from "Madelyn Philips" — the preview card's avatar monogram. */
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
+  const s = parts.map((w) => w.charAt(0)).join('').toUpperCase();
+  return s === '' ? '—' : s;
+}
+
 /* ── shared class fragments ─────────────────────────────────────────── */
 
 const inputBase =
@@ -157,7 +182,7 @@ type RailItem = { id: string; label: string; to?: string; active?: boolean };
 const RAIL_ITEMS: RailItem[] = [
   { id: 'home', label: 'Dashboard', to: '/dashboard' },
   { id: 'people', label: 'Employees', to: '/employees/new', active: true },
-  { id: 'book', label: 'Training' },
+  { id: 'book', label: 'Training & Competency', to: '/training' },
   { id: 'shield', label: 'Compliance' },
   { id: 'chart', label: 'Analytics', to: '/dashboard/analytics' },
   { id: 'cog', label: 'Settings' },
@@ -199,14 +224,18 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
     setSaved(false);
   };
 
-  const attachedCount = useMemo(() => {
-    const d = Object.values(form.docs).filter((x) => x.name).length;
-    const s = Object.values(form.safety).filter((x) => x.name).length;
-    return d + s;
-  }, [form.docs, form.safety]);
+  const docsDone = Object.values(form.docs).filter((x) => x.name !== '').length;
+  const safetyDone = Object.values(form.safety).filter((x) => x.name !== '').length;
+  const attachedCount = docsDone + safetyDone;
 
   const requiredComplete = validate(form);
   const isReady = Object.keys(requiredComplete).length === 0;
+
+  // Live completion for the preview card: 5 required basics + every document.
+  const basicsDone = REQUIRED_KEYS.filter((k) => !requiredComplete[k]).length;
+  const completion = Math.round(
+    ((basicsDone + attachedCount) / (REQUIRED_KEYS.length + TOTAL_DOCS)) * 100,
+  );
 
   // ── horizontal stepper ────────────────────────────────────────────
   const STEPS = [
@@ -322,7 +351,9 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
             <span className="rounded-[2px] bg-[color:var(--color-ink)] px-2.5 py-1.5 text-[color:var(--color-paper)]">
               Employees
             </span>
-            <span className="rounded-[2px] px-2.5 py-1.5 text-[color:var(--color-ink-2)]">Training</span>
+            <Link to="/training" className="rounded-[2px] px-2.5 py-1.5 text-[color:var(--color-ink-2)] hover:bg-[color:var(--color-paper-3)]">
+              Training
+            </Link>
             <span className="rounded-[2px] px-2.5 py-1.5 text-[color:var(--color-ink-2)]">Alerts</span>
           </nav>
 
@@ -381,9 +412,29 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                 <span aria-hidden>›</span>
                 <span className="text-[color:var(--color-ink)]">{isEdit ? 'Edit' : 'Add New Employee'}</span>
               </div>
-              <h1 className="display mt-3 text-[clamp(1.9rem,3.2vw,2.7rem)] text-[color:var(--color-ink)]">
-                {isEdit ? 'Edit Employee' : 'Add New '}
-                {!isEdit && <span className="serif-italic text-[color:var(--color-sgs-ink)]">Employee</span>}
+              <h1 className="display mt-3 text-[clamp(1.9rem,3.2vw,2.7rem)] leading-[1.1] text-[color:var(--color-ink)]">
+                {isEdit ? (
+                  'Edit Employee'
+                ) : (
+                  <>
+                    Add New{' '}
+                    <RotatingText
+                      texts={['Employee', 'Operator', 'Supervisor', 'Technician', 'Driller']}
+                      mainClassName="serif-italic align-baseline text-[color:var(--color-sgs-ink)]"
+                      splitLevelClassName="overflow-hidden pb-[0.14em]"
+                      staggerFrom="last"
+                      staggerDuration={0.02}
+                      rotationInterval={2400}
+                      splitBy="characters"
+                      initial={{ y: '100%' }}
+                      animate={{ y: 0 }}
+                      exit={{ y: '-120%' }}
+                      transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+                      auto
+                      loop
+                    />
+                  </>
+                )}
               </h1>
               <p className="mt-1.5 text-[13.5px] text-[color:var(--color-ink-2)]">
                 {isEdit
@@ -402,9 +453,9 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
           {/* ── stepper ── */}
           <nav className="mt-8 select-none" aria-label="Form steps">
             <div className="relative flex items-start justify-between">
-              <div className="absolute top-[15px] h-px bg-[color:var(--color-rule-soft)]" style={{ left: railLeft, width: railWidth }} />
+              <div className="absolute top-[17px] h-[2px] rounded-full bg-[color:var(--color-rule-soft)]" style={{ left: railLeft, width: railWidth }} />
               <motion.div
-                className="absolute top-[15px] h-px bg-[color:var(--color-sgs)]"
+                className="emp-progress-glow absolute top-[17px] h-[2px] rounded-full bg-[color:var(--color-sgs)]"
                 style={{ left: railLeft }}
                 animate={{ width: `calc(${railWidth} * ${LAST ? step / LAST : 0})` }}
                 transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
@@ -417,18 +468,29 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     key={s.title}
                     type="button"
                     onClick={() => go(i)}
-                    className="relative z-10 flex flex-1 flex-col items-center gap-2 text-center"
+                    className="group relative z-10 flex flex-1 flex-col items-center gap-2 text-center"
                   >
                     <span
-                      className={`grid h-8 w-8 place-items-center rounded-full border text-[12px] font-semibold transition-colors ${
+                      className={`grid h-9 w-9 place-items-center rounded-full border text-[12px] font-semibold transition-all ${
                         active
-                          ? 'border-[color:var(--color-sgs)] bg-[color:var(--color-sgs)] text-white'
+                          ? 'emp-step-on border-[color:var(--color-sgs)] bg-[color:var(--color-sgs)] text-white'
                           : done
                             ? 'border-[color:var(--color-sgs)] bg-[color:var(--color-paper)] text-[color:var(--color-sgs-ink)]'
-                            : 'border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] text-[color:var(--color-ink-3)]'
+                            : 'border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] text-[color:var(--color-ink-3)] group-hover:border-[color:var(--color-rule)]'
                       }`}
                     >
-                      {done ? '✓' : i + 1}
+                      {done ? (
+                        <motion.svg
+                          initial={{ scale: 0, rotate: -30 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                          width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                        >
+                          <path d="M4 12l5 5L20 7" />
+                        </motion.svg>
+                      ) : (
+                        i + 1
+                      )}
                     </span>
                     <span className="hidden min-w-0 flex-col sm:flex">
                       <span className="mono text-[9px] tracking-[0.16em] text-[color:var(--color-ink-3)] uppercase">{s.eyebrow}</span>
@@ -440,8 +502,11 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
             </div>
           </nav>
 
+          <div className="mt-8 flex items-start gap-7">
+            {/* ── wizard column ── */}
+            <div className="min-w-0 flex-1">
           {/* ── carousel viewport — each section is its own screen ── */}
-          <div ref={viewportRef} className="relative mt-8 overflow-hidden">
+          <div ref={viewportRef} className="relative overflow-hidden">
             <motion.div
               className="flex"
               style={{ touchAction: 'pan-y' }}
@@ -460,14 +525,31 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
               }}
             >
               {/* ── panel 0 · Basic Information ── */}
-              <div
+              <motion.div
                 ref={(el) => { panelRefs.current[0] = el; }}
                 style={{ width: panelW || '100%' }}
+                animate={{ opacity: step === 0 ? 1 : 0.4, scale: step === 0 ? 1 : 0.985 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 className="shrink-0 self-start px-1 pb-4 pt-1"
               >
               <Section idx="01" eyebrow="Section A" title="Basic Information">
+                <div className="mb-7 flex items-center gap-5 border-b border-[color:var(--color-rule-soft)] pb-7">
+                  <PhotoUpload
+                    photo={form.photo}
+                    initials={initialsOf(form.fullName)}
+                    onPick={(dataUrl) => set('photo', dataUrl)}
+                    onClear={() => set('photo', '')}
+                  />
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-medium text-[color:var(--color-ink)]">Profile Photo</div>
+                    <p className="mt-1 text-[12px] leading-relaxed text-[color:var(--color-ink-3)]">
+                      JPG or PNG, up to 5MB. Appears on the employee card and the review step.
+                    </p>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
-                  <Field label="Full Name" required error={errors.fullName}>
+                  <Field label="Full Name" required error={errors.fullName} valid={form.fullName.trim() !== ''}>
                     <input
                       value={form.fullName}
                       onChange={(e) => set('fullName', e.target.value)}
@@ -477,7 +559,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     />
                   </Field>
 
-                  <Field label="Employee Number" required error={errors.employeeNo}>
+                  <Field label="Employee Number" required error={errors.employeeNo} valid={form.employeeNo.trim() !== ''}>
                     <input
                       value={form.employeeNo}
                       onChange={(e) => set('employeeNo', e.target.value)}
@@ -488,7 +570,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     />
                   </Field>
 
-                  <Field label="Email" required error={errors.email}>
+                  <Field label="Email" required error={errors.email} valid={EMAIL_RE.test(form.email.trim())}>
                     <input
                       type="email"
                       value={form.email}
@@ -500,7 +582,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                   </Field>
 
                   <Field label="Mobile Number">
-                    <div className={`flex items-stretch overflow-hidden rounded-[0.7rem] border ${inputOk} focus-within:border-[color:var(--color-sgs)]`}>
+                    <div className={`emp-fieldgroup flex items-stretch overflow-hidden rounded-[0.7rem] border ${inputOk} focus-within:border-[color:var(--color-sgs)]`}>
                       <span className="mono grid place-items-center border-r border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper-3)] px-3 text-[12.5px] text-[color:var(--color-ink-2)]">
                         +968
                       </span>
@@ -514,17 +596,22 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     </div>
                   </Field>
 
-                  <Field label="Position" required error={errors.position}>
+                  <Field label="Position" required error={errors.position} valid={form.position !== ''}>
                     <Select
                       value={form.position}
-                      onChange={(v) => set('position', v as Position)}
+                      onChange={(v) => {
+                        const pos = v as Position;
+                        set('position', pos);
+                        // Non-ladder roles carry no grade — clear any stale value.
+                        if (!hasGradeLadder(pos)) set('grade', '');
+                      }}
                       placeholder="Select position…"
                       options={POSITIONS}
                       invalid={!!errors.position}
                     />
                   </Field>
 
-                  <Field label="Project" required error={errors.project}>
+                  <Field label="Project" required error={errors.project} valid={form.project !== ''}>
                     <Select
                       value={form.project}
                       onChange={(v) => set('project', v)}
@@ -534,27 +621,41 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     />
                   </Field>
 
-                  <Field label="Current Grade">
-                    <div className="flex gap-2">
-                      {GRADES.map((g) => {
-                        const on = form.grade === g;
-                        return (
-                          <button
-                            key={g}
-                            type="button"
-                            onClick={() => set('grade', on ? '' : g)}
-                            className={`mono h-[42px] flex-1 rounded-[0.7rem] border text-[13px] font-semibold transition-colors ${
-                              on
-                                ? 'border-[color:var(--color-sgs)] bg-[color:var(--color-sgs)] text-white'
-                                : 'border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] text-[color:var(--color-ink-2)] hover:border-[color:var(--color-ink)]'
-                            }`}
-                          >
-                            {g}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </Field>
+                  {hasGradeLadder(form.position) && (
+                    <Field label="Current Grade" valid={form.grade !== ''}>
+                      <div className="emp-fieldgroup flex rounded-[0.85rem] border p-1">
+                        {GRADE_LADDER.map((g) => {
+                          const on = form.grade === g;
+                          return (
+                            <button
+                              key={g}
+                              type="button"
+                              onClick={() => set('grade', on ? '' : g)}
+                              className="mono relative isolate flex h-[46px] flex-1 flex-col items-center justify-center gap-0.5 rounded-[0.65rem]"
+                            >
+                              {on && (
+                                <motion.span
+                                  layoutId="grade-pill"
+                                  className="emp-btn-primary absolute inset-0 -z-10 rounded-[0.65rem]"
+                                  transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                                />
+                              )}
+                              <span className={`text-[14px] font-semibold leading-none transition-colors ${on ? 'text-white' : 'text-[color:var(--color-ink)]'}`}>
+                                {g}
+                              </span>
+                              <span className={`text-[8px] tracking-[0.1em] uppercase leading-none transition-colors ${on ? 'text-white/85' : 'text-[color:var(--color-ink-4)]'}`}>
+                                {GRADE_TIER[g]}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="mt-1.5 text-[11px] leading-relaxed text-[color:var(--color-ink-4)]">
+                        {form.position} ladder · C → B → A. Confirmed automatically by the Competency engine from
+                        training + experience.
+                      </p>
+                    </Field>
+                  )}
 
                   <Field label="Hire Date">
                     <input
@@ -575,12 +676,14 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                   </Field>
                 </div>
               </Section>
-              </div>
+              </motion.div>
 
               {/* ── panel 1 · Official Documents ── */}
-              <div
+              <motion.div
                 ref={(el) => { panelRefs.current[1] = el; }}
                 style={{ width: panelW || '100%' }}
+                animate={{ opacity: step === 1 ? 1 : 0.4, scale: step === 1 ? 1 : 0.985 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 className="shrink-0 self-start px-1 pb-4 pt-1"
               >
               <Section idx="02" eyebrow="Section B" title="Official Documents" subtitle="A file and an expiry date for each.">
@@ -596,12 +699,14 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                   />
                 ))}
               </Section>
-              </div>
+              </motion.div>
 
               {/* ── panel 2 · Mandatory Safety Trainings ── */}
-              <div
+              <motion.div
                 ref={(el) => { panelRefs.current[2] = el; }}
                 style={{ width: panelW || '100%' }}
+                animate={{ opacity: step === 2 ? 1 : 0.4, scale: step === 2 ? 1 : 0.985 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 className="shrink-0 self-start px-1 pb-4 pt-1"
               >
               <Section idx="03" eyebrow="Section B-2" title="Mandatory Safety Trainings" subtitle="Certificate file + expiry for each course.">
@@ -625,12 +730,14 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                   them, and their expiry dates flow automatically into the Alerts page.
                 </p>
               </Section>
-            </div>
+            </motion.div>
 
               {/* ── panel 3 · Review & Save ── */}
-              <div
+              <motion.div
                 ref={(el) => { panelRefs.current[3] = el; }}
                 style={{ width: panelW || '100%' }}
+                animate={{ opacity: step === 3 ? 1 : 0.4, scale: step === 3 ? 1 : 0.985 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 className="shrink-0 self-start px-1 pb-4 pt-1"
               >
               <motion.section
@@ -647,11 +754,25 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                   </div>
                   <span className="mono text-[11px] tracking-[0.18em] text-[color:var(--color-ink-4)]">04</span>
                 </header>
-                <h3 className="display text-[20px] text-[color:var(--color-ink)]">
-                  {form.fullName || 'New employee'}
-                </h3>
+                <div className="flex items-center gap-4">
+                  <div className="emp-avatar grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full">
+                    {form.photo ? (
+                      <img src={form.photo} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="serif text-[16px] leading-none">{initialsOf(form.fullName)}</span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="display truncate text-[20px] text-[color:var(--color-ink)]">
+                      {form.fullName || 'New employee'}
+                    </h3>
+                    <p className="mt-0.5 truncate text-[12.5px] text-[color:var(--color-ink-3)]">
+                      {form.position || '—'} · {form.project || '—'}
+                    </p>
+                  </div>
+                </div>
 
-                <dl className="mt-4 space-y-2.5 text-[13px]">
+                <dl className="mt-5 space-y-2.5 text-[13px]">
                   <SummaryRow k="Employee No." v={form.employeeNo || '—'} mono />
                   <SummaryRow k="Position" v={form.position || '—'} />
                   <SummaryRow k="Project" v={form.project || '—'} />
@@ -717,17 +838,17 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                   Tip: the same page opens in edit mode from an employee profile, pre-filled and ready to update.
                 </p>
               </motion.section>
-              </div>
+              </motion.div>
             </motion.div>
           </div>
 
-          {/* ── wizard nav ── */}
-          <div className="mt-6 flex items-center justify-between gap-4 border-t border-[color:var(--color-rule-soft)] pt-5">
+          {/* ── floating glass action bar ── */}
+          <div className="emp-glassbar sticky bottom-5 z-30 mt-7 flex items-center justify-between gap-4 rounded-full px-3.5 py-3">
             <button
               type="button"
               onClick={() => go(step - 1)}
               disabled={step === 0}
-              className="inline-flex items-center gap-2 rounded-[0.7rem] border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] px-4 py-2.5 text-[13px] text-[color:var(--color-ink)] transition-colors hover:border-[color:var(--color-ink)] disabled:pointer-events-none disabled:opacity-40"
+              className="inline-flex items-center gap-2 rounded-full border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] px-4 py-2.5 text-[13px] text-[color:var(--color-ink)] transition-colors hover:border-[color:var(--color-ink)] disabled:pointer-events-none disabled:opacity-40"
             >
               <span aria-hidden>←</span> Back
             </button>
@@ -738,19 +859,44 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
               <button
                 type="button"
                 onClick={() => go(step + 1)}
-                className="inline-flex items-center gap-2 rounded-[0.7rem] bg-[color:var(--color-sgs)] px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[color:var(--color-sgs-bright)]"
+                className="emp-btn-primary group inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-[13px] font-semibold text-white"
               >
-                Next <span aria-hidden>→</span>
+                Next{' '}
+                <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">
+                  →
+                </span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={onSave}
-                className="inline-flex items-center gap-2 rounded-[0.7rem] bg-[color:var(--color-sgs)] px-6 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[color:var(--color-sgs-bright)]"
+                className="emp-btn-primary group inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-[13px] font-semibold text-white"
               >
                 {isEdit ? 'Save changes' : 'Save employee'}
+                <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">
+                  ✓
+                </span>
               </button>
             )}
+          </div>
+            </div>
+
+            {/* ── live employee preview ── */}
+            <motion.aside
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="sticky top-[4.75rem] hidden w-[330px] shrink-0 xl:block"
+            >
+              <PreviewCard
+                form={form}
+                basicsDone={basicsDone}
+                docsDone={docsDone}
+                safetyDone={safetyDone}
+                completion={completion}
+                isReady={isReady}
+              />
+            </motion.aside>
           </div>
         </main>
       </div>
@@ -797,18 +943,33 @@ function Field({
   label,
   required = false,
   error,
+  valid = false,
   children,
 }: {
   label: string;
   required?: boolean;
   error?: string | undefined;
+  /** Shows a small copper check next to the label once the value passes. */
+  valid?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-[12.5px] font-medium text-[color:var(--color-ink)]">
+      <span className="mb-2 flex items-center text-[12.5px] font-medium text-[color:var(--color-ink)]">
         {label}
         {required && <span className="ml-0.5 text-[color:var(--color-sgs)]">*</span>}
+        {valid && !error && (
+          <motion.span
+            initial={{ scale: 0.4, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+            className="ml-auto grid h-4 w-4 place-items-center rounded-full bg-[color:var(--color-sgs)]/14 text-[color:var(--color-sgs-ink)]"
+          >
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12l5 5L20 7" />
+            </svg>
+          </motion.span>
+        )}
       </span>
       {children}
       {error && <span className="mt-1 block text-[11.5px] text-[oklch(0.55_0.17_28)]">{error}</span>}
@@ -859,8 +1020,99 @@ function Select({
   );
 }
 
-/** A file "input" that reads as a clean button. Shows the file name once
- *  chosen, with Replace / Remove affordances. No native file-input chrome. */
+/** Circular profile-photo picker — click or drag an image, previewed instantly
+ *  via FileReader (frontend-only; production wiring uploads to Supabase
+ *  Storage and stores the resulting signed URL, per §3). Falls back to the
+ *  employee's initials until a photo is chosen. */
+function PhotoUpload({
+  photo,
+  initials,
+  onPick,
+  onClear,
+}: {
+  photo: string;
+  initials: string;
+  onPick: (dataUrl: string) => void;
+  onClear: () => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+  const open = () => ref.current?.click();
+
+  const readFile = (f: File) => {
+    if (!f.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') onPick(reader.result);
+    };
+    reader.readAsDataURL(f);
+  };
+
+  return (
+    <div className="group relative shrink-0">
+      <input
+        ref={ref}
+        type="file"
+        accept="image/png,image/jpeg"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) readFile(f);
+          e.target.value = '';
+        }}
+      />
+      <button
+        type="button"
+        onClick={open}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          const f = e.dataTransfer.files[0];
+          if (f) readFile(f);
+        }}
+        aria-label={photo ? 'Replace profile photo' : 'Upload profile photo'}
+        className={`emp-avatar relative grid h-[76px] w-[76px] place-items-center overflow-hidden rounded-full border-2 transition-all ${
+          dragging
+            ? 'border-[color:var(--color-sgs)] ring-4 ring-[color:var(--color-sgs)]/16'
+            : photo
+              ? 'border-[color:var(--color-paper)]'
+              : 'border-dashed border-[color:var(--color-rule)] bg-[color:var(--color-paper-3)]'
+        }`}
+        style={!photo ? { background: 'var(--color-paper-3)', boxShadow: 'none' } : undefined}
+      >
+        {photo ? (
+          <img src={photo} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <span className="serif text-[22px] leading-none text-[color:var(--color-ink-3)]">{initials}</span>
+        )}
+        <span className="absolute inset-0 hidden items-center justify-center bg-[oklch(0.15_0.01_55)]/55 text-white group-hover:flex">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 7h3l2-2h6l2 2h3v13H4z" />
+            <circle cx="12" cy="13.5" r="3.5" />
+          </svg>
+        </span>
+      </button>
+      {photo && (
+        <button
+          type="button"
+          onClick={onClear}
+          aria-label="Remove profile photo"
+          className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] text-[color:var(--color-ink-3)] shadow-[var(--shadow-1)] transition-colors hover:text-[oklch(0.55_0.17_28)]"
+        >
+          ×
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** A file drop-zone that also reads as a clean button: click anywhere or drag
+ *  a file onto it. Shows an attached-file chip with Replace / Remove once set. */
 function FileButton({
   name,
   placeholder,
@@ -873,46 +1125,89 @@ function FileButton({
   onClear: () => void;
 }) {
   const ref = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
   const open = () => ref.current?.click();
 
-  return (
-    <div
-      className={`flex items-center justify-between gap-2 rounded-[0.7rem] border px-3 py-2 ${
-        name ? 'border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)]' : 'border-dashed border-[color:var(--color-rule)] bg-[color:var(--color-paper-3)]/40'
-      }`}
-    >
-      <input
-        ref={ref}
-        type="file"
-        accept=".pdf,image/png,image/jpeg"
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) onPick(f.name);
-          e.target.value = '';
-        }}
-      />
-      <span className={`min-w-0 flex-1 truncate text-[12.5px] ${name ? 'text-[color:var(--color-ink)]' : 'text-[color:var(--color-ink-4)]'}`}>
-        {name || placeholder}
-      </span>
-      {name ? (
+  const input = (
+    <input
+      ref={ref}
+      type="file"
+      accept=".pdf,image/png,image/jpeg"
+      className="hidden"
+      onChange={(e) => {
+        const f = e.target.files?.[0];
+        if (f) onPick(f.name);
+        e.target.value = '';
+      }}
+    />
+  );
+
+  if (name) {
+    return (
+      <div className="emp-filebox flex items-center gap-2.5 rounded-[0.85rem] border border-[color:var(--color-rule-soft)] px-3 py-2">
+        {input}
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[0.6rem] bg-[color:var(--color-sgs)]/12 text-[color:var(--color-sgs-ink)]">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <path d="M14 2v6h6" />
+          </svg>
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[12.5px] font-medium text-[color:var(--color-ink)]">{name}</span>
+          <span className="mono block text-[9px] tracking-[0.16em] text-[color:var(--color-ink-4)] uppercase">Attached</span>
+        </span>
         <span className="flex shrink-0 items-center gap-1">
-          <button type="button" onClick={open} className="rounded-[0.4rem] px-2 py-1 text-[11px] text-[color:var(--color-ink-2)] hover:bg-[color:var(--color-paper-3)]">
+          <button type="button" onClick={open} className="rounded-full px-2.5 py-1 text-[11px] text-[color:var(--color-ink-2)] transition-colors hover:bg-[color:var(--color-paper-3)]">
             Replace
           </button>
-          <button type="button" onClick={onClear} aria-label="Remove file" className="grid h-6 w-6 place-items-center rounded-full text-[color:var(--color-ink-3)] hover:bg-[color:var(--color-paper-3)] hover:text-[oklch(0.55_0.17_28)]">
+          <button
+            type="button"
+            onClick={onClear}
+            aria-label="Remove file"
+            className="grid h-6 w-6 place-items-center rounded-full text-[color:var(--color-ink-3)] transition-colors hover:bg-[color:var(--color-paper-3)] hover:text-[oklch(0.55_0.17_28)]"
+          >
             ×
           </button>
         </span>
-      ) : (
-        <button
-          type="button"
-          onClick={open}
-          className="shrink-0 rounded-[0.4rem] border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] px-2.5 py-1 text-[11.5px] font-medium text-[color:var(--color-ink)] hover:border-[color:var(--color-ink)]"
-        >
-          Upload
-        </button>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      onClick={open}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragging(false);
+        const f = e.dataTransfer.files[0];
+        if (f) onPick(f.name);
+      }}
+      className={`emp-filebox group flex cursor-pointer items-center gap-2.5 rounded-[0.85rem] border border-dashed px-3 py-2 transition-colors ${
+        dragging ? 'is-dragging' : 'border-[color:var(--color-rule)] hover:border-[color:var(--color-sgs)]/60'
+      }`}
+    >
+      {input}
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[0.6rem] border border-dashed border-[color:var(--color-rule)] text-[color:var(--color-ink-3)] transition-colors group-hover:border-[color:var(--color-sgs)]/60 group-hover:text-[color:var(--color-sgs-ink)]">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 16V4" />
+          <path d="M7 9l5-5 5 5" />
+          <path d="M4 20h16" />
+        </svg>
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[12.5px] text-[color:var(--color-ink-2)]">{placeholder}</span>
+        <span className="mono block text-[9px] tracking-[0.12em] text-[color:var(--color-ink-4)] uppercase">
+          Click or drop · PDF JPG PNG
+        </span>
+      </span>
+      <span className="shrink-0 rounded-full border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--color-ink)] transition-colors group-hover:border-[color:var(--color-ink)]">
+        Browse
+      </span>
     </div>
   );
 }
@@ -962,6 +1257,159 @@ function SummaryRow({ k, v, mono = false }: { k: string; v: React.ReactNode; mon
     <div className="flex items-center justify-between gap-3">
       <dt className="text-[color:var(--color-ink-3)]">{k}</dt>
       <dd className={`text-right text-[color:var(--color-ink)] ${mono ? 'mono tabular' : ''}`}>{v}</dd>
+    </div>
+  );
+}
+
+/** Sticky right column: a live "employee card" that assembles itself as the
+ *  form is filled — avatar monogram, completion ring, per-section checklist. */
+function PreviewCard({
+  form,
+  basicsDone,
+  docsDone,
+  safetyDone,
+  completion,
+  isReady,
+}: {
+  form: FormState;
+  basicsDone: number;
+  docsDone: number;
+  safetyDone: number;
+  completion: number;
+  isReady: boolean;
+}) {
+  const rows = [
+    { label: 'Basic information', done: basicsDone, total: REQUIRED_KEYS.length },
+    { label: 'Official documents', done: docsDone, total: OFFICIAL_DOCS.length },
+    { label: 'Safety certificates', done: safetyDone, total: SAFETY_CERTS.length },
+  ];
+  return (
+    <div className="surface overflow-hidden rounded-[3px]">
+      {/* copper mesh band */}
+      <div className="emp-preview-band relative h-[88px]">
+        <span className="mono absolute left-6 top-4 text-[9.5px] tracking-[0.24em] text-[color:var(--color-sgs-ink)] uppercase">
+          Live preview
+        </span>
+      </div>
+
+      <div className="px-6 pb-6">
+        {/* `relative` lifts this row above the positioned band so the avatar
+            overlaps it instead of being painted underneath. */}
+        <div className="relative -mt-9 flex items-end justify-between">
+          <div className="emp-avatar grid h-[72px] w-[72px] place-items-center overflow-hidden rounded-full">
+            {form.photo ? (
+              <img src={form.photo} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="serif text-[24px] leading-none">{initialsOf(form.fullName)}</span>
+            )}
+          </div>
+          <span
+            className={`mono inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9.5px] tracking-[0.14em] uppercase ${
+              isReady
+                ? 'bg-[color:var(--color-sgs)]/12 text-[color:var(--color-sgs-ink)]'
+                : 'bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-3)]'
+            }`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${isReady ? 'bg-[color:var(--color-sgs)]' : 'bg-[color:var(--color-ink-4)]'}`} />
+            {isReady ? 'Ready' : 'Draft'}
+          </span>
+        </div>
+
+        <h3 className="display mt-4 truncate text-[19px] leading-tight text-[color:var(--color-ink)]">
+          {form.fullName || 'New Employee'}
+        </h3>
+        <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-[color:var(--color-ink-3)]">
+          <span className="truncate">{form.position || 'Position'}</span>
+          <span aria-hidden>·</span>
+          <span className="truncate">{form.project || 'Project'}</span>
+          {form.grade && (
+            <span className="mono ml-auto inline-grid h-5 w-5 shrink-0 place-items-center rounded-[0.35rem] bg-[color:var(--color-ink)] text-[10px] font-bold text-[color:var(--color-paper)]">
+              {form.grade}
+            </span>
+          )}
+        </p>
+
+        {/* completion ring */}
+        <div className="mt-5 flex items-center gap-4 rounded-[1.1rem] border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper-2)]/60 p-4">
+          <CompletionRing pct={completion} />
+          <div className="min-w-0">
+            <div className="text-[13px] font-medium text-[color:var(--color-ink)]">Profile completion</div>
+            <p className="mt-0.5 text-[11.5px] leading-relaxed text-[color:var(--color-ink-3)]">
+              Documents flow into the Alerts page automatically.
+            </p>
+          </div>
+        </div>
+
+        {/* per-section checklist */}
+        <ul className="mt-5 space-y-3.5">
+          {rows.map((r) => {
+            const full = r.done === r.total;
+            return (
+              <li key={r.label}>
+                <div className="flex items-center justify-between text-[12px]">
+                  <span className="flex items-center gap-1.5 text-[color:var(--color-ink-2)]">
+                    {full && (
+                      <motion.span
+                        initial={{ scale: 0.4, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                        className="grid h-3.5 w-3.5 place-items-center rounded-full bg-[color:var(--color-sgs)] text-white"
+                      >
+                        <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 12l5 5L20 7" />
+                        </svg>
+                      </motion.span>
+                    )}
+                    {r.label}
+                  </span>
+                  <span className="tabular text-[color:var(--color-ink)]">
+                    {r.done}/{r.total}
+                  </span>
+                </div>
+                <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[color:var(--color-paper-3)]">
+                  <motion.div
+                    className="h-full rounded-full bg-[color:var(--color-sgs)]"
+                    animate={{ width: `${(r.done / r.total) * 100}%` }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+
+        <div className="mt-5 flex items-center justify-between border-t border-[color:var(--color-rule-soft)] pt-4">
+          <span className="mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-3)] uppercase">Employee No.</span>
+          <span className="tabular text-[13px] font-medium text-[color:var(--color-ink)]">{form.employeeNo || '—'}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Animated copper donut showing overall form completeness. */
+function CompletionRing({ pct }: { pct: number }) {
+  const R = 28;
+  const C = 2 * Math.PI * R;
+  return (
+    <div className="relative grid h-[72px] w-[72px] shrink-0 place-items-center">
+      <svg width="72" height="72" viewBox="0 0 72 72" className="-rotate-90">
+        <circle cx="36" cy="36" r={R} fill="none" stroke="var(--color-paper-3)" strokeWidth="6" />
+        <motion.circle
+          cx="36"
+          cy="36"
+          r={R}
+          fill="none"
+          stroke="var(--color-sgs)"
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={C}
+          initial={{ strokeDashoffset: C }}
+          animate={{ strokeDashoffset: C * (1 - pct / 100) }}
+          transition={{ type: 'spring', stiffness: 60, damping: 16 }}
+        />
+      </svg>
+      <span className="tabular absolute text-[14px] font-semibold text-[color:var(--color-ink)]">{pct}%</span>
     </div>
   );
 }
