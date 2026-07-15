@@ -11,24 +11,24 @@ const AUTOPLAY = 5.5
 const variants = [
   {
     key: 'crew',
-    label: 'HSE',
-    specA: { icon: '⛨', value: '98%', unit: '/Pass rate' },
-    specB: { icon: '✓', value: '6wk', unit: '/NEBOSH' },
-    location: 'Sohar · Field Safety Yard',
+    label: 'Field Ops',
+    specA: { icon: '⛨', value: '312', unit: '/On the roster' },
+    specB: { icon: '✓', value: '94%', unit: '/Certified' },
+    location: 'OQ · Field Operations',
   },
   {
     key: 'hero',
-    label: 'Well Control',
-    specA: { icon: '⛨', value: '92%', unit: '/Attendance' },
-    specB: { icon: '↯', value: 'L3', unit: '/IWCF' },
-    location: 'Muscat · Main Training Campus',
+    label: 'Safety',
+    specA: { icon: '⛨', value: '7', unit: '/Required certificates' },
+    specB: { icon: '↯', value: '90d', unit: '/Expiry watch' },
+    location: 'Oxy Oman · Compliance',
   },
   {
     key: 'engineer',
-    label: 'E&I',
-    specA: { icon: '⛨', value: '10wk', unit: '/CompEx' },
-    specB: { icon: '↯', value: '4.8k', unit: '/Deployed' },
-    location: 'Muscat · Instrumentation Lab',
+    label: 'Grades',
+    specA: { icon: '⛨', value: 'C·B·A', unit: '/Ladder' },
+    specB: { icon: '↯', value: 'Auto', unit: '/Computed' },
+    location: 'Muscat · Competency Engine',
   },
 ]
 
@@ -153,7 +153,9 @@ export default function Hero({ introDone }) {
   const hold = (v) => {
     paused.current = v
     const tween = progress.current?._tween
-    if (tween) (v ? tween.pause() : tween.resume())
+    if (!tween) return
+    if (v) tween.pause()
+    else tween.resume()
   }
 
   const v = variants[active]
@@ -169,11 +171,15 @@ export default function Hero({ introDone }) {
         <div className="flex min-h-[calc(100svh-3rem)] flex-col pt-2 lg:pl-[clamp(0.5rem,2vw,2.5rem)]">
           <Nav />
 
-          <h1 className="font-display text-ink mt-[clamp(2.5rem,6vh,4.5rem)] text-[clamp(2.3rem,3.9vw,3.9rem)] leading-[1.12] font-bold tracking-tight">
+          <p className="eyebrow text-ink-soft mt-[clamp(2.5rem,6vh,4.5rem)]">
+            When you need to be sure
+          </p>
+
+          <h1 className="font-display text-ink mt-5 text-[clamp(2.3rem,3.9vw,3.9rem)] leading-[1.12] font-bold tracking-tight">
             {[
-              <>Train For The</>,
+              <>Every Employee,</>,
               <>
-                Real Field With
+                Every Certificate
                 <span className="ml-3 inline-flex align-[0.04em] -space-x-[0.22em]">
                   <img
                     src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=160&q=70"
@@ -194,10 +200,10 @@ export default function Hero({ introDone }) {
                   aria-label="SGS"
                   className="mr-[0.18em] inline-block h-[1.02em] w-auto align-[-0.22em]"
                 />
-                Training -
+                Workforce,
               </>,
               <>
-                Deploy <em className="text-copper-deep italic">Certified</em>
+                Graded <em className="text-copper-deep italic">Live</em>
               </>,
             ].map((line, i) => (
               <span key={i} className="block overflow-hidden pb-[0.1em] -mb-[0.1em]">
@@ -230,8 +236,8 @@ export default function Hero({ introDone }) {
               className="text-ink-soft max-w-[24ch] text-[0.68rem] leading-[1.8] font-medium tracking-[0.08em] uppercase"
             >
               <span className="bg-copper mr-2 -mt-0.5 inline-block h-2 w-2 align-middle" />
-              SGS is the Gulf's field-proven choice for accredited oil &amp; gas
-              training with full tracking of every deployed trainee.
+              SGS runs its field-operations workforce on one live system. Every
+              employee, every certificate, and a competency grade that stays current.
             </p>
 
             <div className="flex-1">
@@ -328,7 +334,7 @@ export default function Hero({ introDone }) {
           <div data-panel-stack className="absolute inset-0">
             <img
               src={section1}
-              alt="Illustration: an SGS coordinator with a tablet tracking a crew of trainees, in SGS orange"
+              alt="Illustration: an SGS supervisor with a tablet reviewing a field crew's certificates, in SGS orange"
               fetchPriority="high"
               className="absolute inset-0 h-full w-full object-cover object-[center_30%]"
             />
@@ -337,11 +343,11 @@ export default function Hero({ introDone }) {
           {/* Vertical brand tab + arrow circle */}
           <div data-panel-ui className="absolute top-5 left-5 z-10 flex flex-col items-center gap-2.5">
             <span className="bg-ivory text-ink border-ink/10 rounded-full border px-2.5 py-4 text-[10px] font-semibold tracking-[0.22em] uppercase [writing-mode:vertical-rl]">
-              SGS Training
+              SGS Workforce
             </span>
             <a
               href="#tracking"
-              aria-label="See how tracking works"
+              aria-label="See how grading works"
               className="bg-ink text-ivory hover:bg-copper-deep flex h-9 w-9 items-center justify-center rounded-full text-sm transition-colors duration-300"
             >
               ↗
@@ -403,7 +409,7 @@ export default function Hero({ introDone }) {
               </span>
             </span>
             <span className="hidden max-w-[15rem] flex-wrap justify-end gap-2 md:flex">
-              {['Enroll', 'Train', 'Certify', 'Deploy', 'Monitor', 'Gulf'].map((k) => (
+              {['Register', 'Certify', 'Grade', 'Promote', 'Alert', 'SGS'].map((k) => (
                 <span
                   key={k}
                   data-keyword

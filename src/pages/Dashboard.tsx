@@ -3,6 +3,17 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import Wordmark from '../components/Wordmark';
 import './dashboard.css';
+import type { Event, Kpi } from './Dashboard.types';
+import { formatGST, gen, relTime, verbFor } from './Dashboard.utils';
+import {
+  activityRows,
+  eventTemplates,
+  kpis,
+  MUSANDAM_MINI,
+  OMAN_MINI,
+  omanHubs,
+  paletteItems,
+} from './Dashboard.data';
 
 /**
  * Dashboard — operations cockpit for SGS Oman Learning Registry.
@@ -183,7 +194,7 @@ function TopBar({
   const nav: Array<{ label: string; to?: string }> = [
     { label: 'Overview', to: '/dashboard' },
     { label: 'Analytics', to: '/dashboard/analytics' },
-    { label: 'Employees', to: '/employees/new' },
+    { label: 'Employees', to: '/employees' },
     { label: 'Training', to: '/training' },
     { label: 'Trainees' },
   ];
@@ -267,7 +278,7 @@ function TopBar({
 function Rail() {
   const items: Array<{ i: string; active?: boolean; to?: string; label: string }> = [
     { i: 'home',   active: true, to: '/dashboard', label: 'Dashboard' },
-    { i: 'people', to: '/employees/new', label: 'Employees' },
+    { i: 'people', to: '/employees', label: 'Employees' },
     { i: 'book', to: '/training', label: 'Training & Competency' },
     { i: 'shield', label: 'Compliance' },
     { i: 'chart', to: '/dashboard/analytics', label: 'Analytics' },
@@ -400,23 +411,6 @@ function PageHeader() {
    KPI STRIP
    ════════════════════════════════════════════════════════════════════ */
 
-type Kpi = {
-  label: string;
-  value: string;
-  unit?: string;
-  delta: number;
-  series: number[];
-  ctx: string;
-};
-
-const kpis: Kpi[] = [
-  { label: 'Active trainees',     value: '1,284', delta: 12.4,  series: gen(20, 1140, 1290, 7),  ctx: 'enrolled · in-country' },
-  { label: 'New enrolments, 30 d', value: '418',  delta: 8.1,   series: gen(30, 80, 220, 6),     ctx: 'across 27 courses' },
-  { label: 'Avg. progress',       value: '88.7',  unit: '%', delta: 0.6, series: gen(30, 84, 92, 5), ctx: 'course completion' },
-  { label: 'Pass rate',           value: '94.3',  unit: '%', delta: -1.2, series: gen(30, 92, 97, 4), ctx: '7-day rolling' },
-  { label: 'Deployed to operators', value: '486', delta: 8.0,  series: gen(30, 300, 520, 3),    ctx: 'on oil & gas sites' },
-  { label: 'In monitoring · 30 d', value: '218',  delta: 14.0,  series: gen(30, 130, 230, 9),    ctx: 'post-deployment' },
-];
 
 function KpiCard({ k, idx }: { k: Kpi; idx: number }) {
   const up = k.delta >= 0;
@@ -761,23 +755,8 @@ function ComplianceDonut() {
    OMAN MINI MAP  (live pings)
    ════════════════════════════════════════════════════════════════════ */
 
-const OMAN_MINI =
-  'M260 90 L320 70 L380 80 L430 100 L470 130 L500 170 L515 220 ' +
-  'L515 280 L495 330 L475 380 L445 425 L405 460 L350 480 L300 478 ' +
-  'L268 460 L250 430 L246 395 L256 360 L280 330 L305 305 L322 270 ' +
-  'L308 240 L278 220 L250 200 L232 170 L226 140 L242 110 Z';
-const MUSANDAM_MINI = 'M335 35 L375 30 L395 55 L370 70 L342 64 Z';
 
-const omanHubs = [
-  { name: 'Muscat',  x: 410, y: 158, hq: true,  staff: 612, sector: 'SGS HQ' },
-  { name: 'Sohar',   x: 365, y: 110,            staff: 184, sector: 'OQ'      },
-  { name: 'Sur',     x: 470, y: 200,            staff: 96,  sector: 'bp LNG'  },
-  { name: 'Nizwa',   x: 350, y: 220,            staff: 64,  sector: 'Daleel'  },
-  { name: 'Duqm',    x: 420, y: 340,            staff: 188, sector: 'OQ Ref.' },
-  { name: 'Salalah', x: 310, y: 460,            staff: 96,  sector: 'Shell'   },
-];
-
-function OmanMiniMap() {
+export function OmanMiniMap() {
   // simulate live "events" cycling through hubs
   const [activeHub, setActiveHub] = useState(0);
   useVisibleInterval(() => setActiveHub((i) => (i + 1) % omanHubs.length), 1800);
@@ -904,26 +883,6 @@ function OmanMiniMap() {
    LIVE STREAM
    ════════════════════════════════════════════════════════════════════ */
 
-type Event = {
-  id: number;
-  ts: string;
-  type: 'pass' | 'retake' | 'enrol' | 'cert' | 'audit';
-  who: string;
-  what: string;
-  hub: string;
-};
-
-const eventTemplates: Array<Omit<Event, 'id' | 'ts'>> = [
-  { type: 'pass',   who: 'F. Al-Balushi',  what: 'Well Control · M02',        hub: 'PDO'     },
-  { type: 'enrol',  who: 'H. Al-Maskari',  what: 'HSE & H2S · M01',           hub: 'Sohar'   },
-  { type: 'pass',   who: 'M. Al-Riyami',   what: 'CompEx E&I · M11',          hub: 'OQ'      },
-  { type: 'cert',   who: 'N. Al-Hinai',    what: 'PDO well-control site',     hub: 'PDO'     },
-  { type: 'retake', who: 'R. Al-Habsi',    what: 'Process Safety · M03',      hub: 'Salalah' },
-  { type: 'audit',  who: 'K. Al-Maamari',  what: 'Duqm site · week 9',        hub: 'OQ'      },
-  { type: 'pass',   who: 'S. Al-Lawati',   what: 'Rigging & Lifting · M07',   hub: 'bp'      },
-  { type: 'enrol',  who: 'A. Al-Saadi',    what: 'Operations Readiness · M05', hub: 'Muscat' },
-  { type: 'cert',   who: 'K. Al-Zadjali',  what: 'Shell HSE site',            hub: 'Shell'   },
-];
 
 function LiveStream() {
   const [events, setEvents] = useState<Event[]>(() =>
@@ -1001,26 +960,12 @@ function LiveStream() {
   );
 }
 
-function verbFor(t: Event['type']) {
-  switch (t) {
-    case 'pass':   return 'passed';
-    case 'retake': return 'requested retake of';
-    case 'enrol':  return 'enrolled in';
-    case 'cert':   return 'deployed to';
-    case 'audit':  return 'flagged for review at';
-  }
-}
-
-function relTime(secs: number) {
-  if (secs < 60) return `${secs} s ago`;
-  return `${Math.floor(secs / 60)} m ago`;
-}
 
 /* ════════════════════════════════════════════════════════════════════
    PROGRAMME FUNNEL  (sankey-ish)
    ════════════════════════════════════════════════════════════════════ */
 
-function ProgrammeFunnel() {
+export function ProgrammeFunnel() {
   const stages = [
     { label: 'Enrolled',    value: 5240 },
     { label: 'Started',     value: 4920 },
@@ -1195,7 +1140,7 @@ function Gauge() {
    HUB BAR CHART
    ════════════════════════════════════════════════════════════════════ */
 
-function HubBarChart() {
+export function HubBarChart() {
   const data = [
     { hub: 'PDO',      active: 186, due: 24 },
     { hub: 'OQ',       active: 142, due: 18 },
@@ -1319,7 +1264,7 @@ function SectorRadar() {
    RENEWALS
    ════════════════════════════════════════════════════════════════════ */
 
-function RenewalsCountdown() {
+export function RenewalsCountdown() {
   const items = [
     { code: 'PDO · Well Control', count: 24, days: 4,  pri: 'critical' as const },
     { code: 'OQ · HSE & H2S',     count: 18, days: 9,  pri: 'high' as const },
@@ -1365,18 +1310,8 @@ function RenewalsCountdown() {
    ACTIVITY LEDGER
    ════════════════════════════════════════════════════════════════════ */
 
-const activityRows: Array<[string, string, string, string, string, string, 'Pass' | 'Retake' | 'New']> = [
-  ['12.07.2026', '14:08:22Z', 'N. Al-Hinai',     'ISO 17025 · M14',  'Muscat',   '96.4%', 'Pass'],
-  ['12.07.2026', '13:51:04Z', 'F. Al-Balushi',   'API 510 · M02',    'Sohar',    '92.1%', 'Pass'],
-  ['12.07.2026', '13:18:39Z', 'M. Al-Riyami',    'IATF 16949 · M11', 'Muscat',   '94.2%', 'Pass'],
-  ['12.07.2026', '12:46:11Z', 'S. Al-Lawati',    'ISO 17020 · M07',  'Duqm',     '91.6%', 'Pass'],
-  ['11.07.2026', '11:30:55Z', 'R. Al-Habsi',     'NACE CIP-2 · M03', 'Salalah',  '64.0%', 'Retake'],
-  ['11.07.2026', '10:14:08Z', 'A. Al-Saadi',     'GSO PVoC · M05',   'Muscat',   '89.3%', 'Pass'],
-  ['11.07.2026', '09:02:43Z', 'K. Al-Zadjali',   'PDO HSE · M02',    'Sohar',    '92.1%', 'Pass'],
-  ['11.07.2026', '08:38:17Z', 'H. Al-Maskari',   'API 570 · M01',    'Duqm',     '—',      'New'],
-];
 
-function ActivityLedger() {
+export function ActivityLedger() {
   return (
     <Panel
       title="Recent assessments"
@@ -1440,7 +1375,7 @@ function ResultPill({ r }: { r: 'Pass' | 'Retake' | 'New' }) {
    HEATMAP
    ════════════════════════════════════════════════════════════════════ */
 
-function Heatmap() {
+export function Heatmap() {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const data = useMemo(() => {
     const out: number[][] = [];
@@ -1496,7 +1431,7 @@ function Heatmap() {
    TOP PROGRAMMES
    ════════════════════════════════════════════════════════════════════ */
 
-function TopProgrammes() {
+export function TopProgrammes() {
   const rows = [
     { code: 'WC-201', title: 'Well Control — IWCF Level 3',          enrolled: 412, pass: 96, trend: 'up' as const, sector: 'Drilling', delta: 4.2 },
     { code: 'HS-302', title: 'HSE & H2S Field Safety — PDO Approved', enrolled: 388, pass: 94, trend: 'up' as const, sector: 'Safety', delta: 2.8 },
@@ -1539,7 +1474,7 @@ function TopProgrammes() {
    RISK REGISTER
    ════════════════════════════════════════════════════════════════════ */
 
-function RiskRegister() {
+export function RiskRegister() {
   const risks = [
     { id: 'T-014', text: 'PDO well-control trainee behind by 2 modules',     sev: 4, lik: 4, owner: 'F. Al-Balushi' },
     { id: 'T-021', text: 'Shell HSE deployment · 30-day review overdue',     sev: 3, lik: 4, owner: 'N. Al-Hinai' },
@@ -1608,21 +1543,6 @@ function FooterStrip() {
    COMMAND PALETTE
    ════════════════════════════════════════════════════════════════════ */
 
-const paletteItems = [
-  { kind: 'Action',  label: 'New programme',        hint: 'Create · ⌘N' },
-  { kind: 'Action',  label: 'Export country PDF',   hint: 'Export · ⌘E' },
-  { kind: 'Action',  label: 'Share with auditor',   hint: 'Share · ⌘⇧S' },
-  { kind: 'Action',  label: 'Open compliance log',  hint: 'Navigate' },
-  { kind: 'Person',  label: 'Nasser Al-Hinai',      hint: 'Country Manager · Muscat' },
-  { kind: 'Person',  label: 'Faisal Al-Balushi',    hint: 'Sohar HSE Lead' },
-  { kind: 'Person',  label: 'Reem Al-Habsi',        hint: 'Salalah Lab Coordinator' },
-  { kind: 'Programme', label: 'API 510 — Pressure Vessel Inspector', hint: 'EN-201 · 80 h' },
-  { kind: 'Programme', label: 'NACE CIP-2 — Coatings',                hint: 'EN-214 · 64 h' },
-  { kind: 'Programme', label: 'Marine Cargo Surveying',                hint: 'MR-118 · 56 h' },
-  { kind: 'Hub',     label: 'Muscat HQ',            hint: 'Way 4505 · Madinat Al Sultan Qaboos' },
-  { kind: 'Hub',     label: 'Sohar industrial port',hint: '184 personnel' },
-  { kind: 'Hub',     label: 'Duqm SEZAD refinery',  hint: '188 personnel' },
-];
 
 function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [q, setQ] = useState('');
@@ -1929,7 +1849,7 @@ function MultiLineChart() {
 
 /* ── Waterfall ─────────────────────────────────────────────────────── */
 
-function WaterfallChart() {
+export function WaterfallChart() {
   const steps: Array<{ label: string; v: number; type: 'total' | 'pos' | 'neg' }> = [
     { label: 'Q3 start',    v: 1180, type: 'total' },
     { label: 'New hires',   v: 142,  type: 'pos' },
@@ -2237,7 +2157,7 @@ function GroupedBarChart() {
 
 /* ── Treemap ───────────────────────────────────────────────────────── */
 
-function TreemapChart() {
+export function TreemapChart() {
   // Hand-laid squarified layout (precomputed for clarity)
   const items = [
     { name: 'API · NACE',         v: 412, x: 0,    y: 0,   w: 0.42, h: 0.55, c: 'oklch(0.685 0.198 41)' },
@@ -2359,7 +2279,7 @@ function PolarBarChart() {
 
 /* ── Stream graph ──────────────────────────────────────────────────── */
 
-function StreamGraph() {
+export function StreamGraph() {
   const series = [
     { name: 'Energy',     color: 'oklch(0.685 0.198 41)', data: gen(28, 30, 90, 4) },
     { name: 'Maritime',   color: 'oklch(0.555 0.180 38)', data: gen(28, 20, 60, 11) },
@@ -2426,7 +2346,7 @@ function StreamGraph() {
 
 /* ── Calendar year (12 month × 31 day grid) ─────────────────────────── */
 
-function CalendarYearChart() {
+export function CalendarYearChart() {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const data = useMemo(() => {
     const out: number[][] = [];
@@ -2622,26 +2542,3 @@ function useTip<T>() {
   return { ref, tip, move, leave };
 }
 
-function formatGST(d: Date) {
-  const utc = d.getTime() + d.getTimezoneOffset() * 60_000;
-  const m = new Date(utc + 4 * 60 * 60_000);
-  const hh = String(m.getHours()).padStart(2, '0');
-  const mm = String(m.getMinutes()).padStart(2, '0');
-  const ss = String(m.getSeconds()).padStart(2, '0');
-  return `${hh}:${mm}:${ss}`;
-}
-
-function gen(n: number, lo: number, hi: number, seed = 7) {
-  const out: number[] = [];
-  let s = seed;
-  for (let i = 0; i < n; i++) {
-    s = (s * 9301 + 49297) % 233280;
-    const r = s / 233280;
-    const trend = (i / n) * (hi - lo) * 0.4;
-    const base = lo + (hi - lo) * 0.4 + trend;
-    const wob = Math.sin(i / 4 + seed) * (hi - lo) * 0.18;
-    const noise = (r - 0.5) * (hi - lo) * 0.25;
-    out.push(Math.max(lo, Math.min(hi, +(base + wob + noise).toFixed(2))));
-  }
-  return out;
-}

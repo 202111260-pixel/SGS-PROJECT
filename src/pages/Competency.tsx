@@ -34,362 +34,46 @@ import './competency.css';
  * and moves there unchanged.
  */
 
-/* ── domain: trainings, tiers, matrix ───────────────────────────────── */
-
-const GRADE_ORDER = ['C', 'B', 'A'] as const;
-type Grade = (typeof GRADE_ORDER)[number];
-
-type Tier = 'basic' | 'intermediate' | 'advanced';
-const TIER_LABEL: Record<Tier, string> = {
-  basic: 'Basic',
-  intermediate: 'Intermediate',
-  advanced: 'Advanced',
-};
-
-type Training = {
-  code: string;
-  name: string;
-  tier: Tier;
-  validityYears: number;
-};
-
-const TRAININGS = [
-  { code: 'HSEI', name: 'OPAL HSE Induction', tier: 'basic', validityYears: 2 },
-  { code: 'H2SI', name: 'H2S & SO2 Awareness and Escape', tier: 'basic', validityYears: 2 },
-  { code: 'AHA', name: 'AHA Heartsaver / First Aid', tier: 'basic', validityYears: 2 },
-  { code: 'FWI', name: 'Fire Warden & Fire Extinguisher', tier: 'basic', validityYears: 2 },
-  { code: 'PTWS', name: 'Permit to Work Signatories', tier: 'intermediate', validityYears: 2 },
-  { code: 'LV', name: 'Defensive Driving — Light Vehicle', tier: 'intermediate', validityYears: 3 },
-  { code: 'HV', name: 'Defensive Driving — Heavy Goods Vehicle', tier: 'intermediate', validityYears: 3 },
-  { code: 'AGT', name: 'Authorised Gas Tester', tier: 'advanced', validityYears: 2 },
-  { code: 'RNB', name: 'Riggers & Banksmen', tier: 'advanced', validityYears: 3 },
-  { code: 'OPAL', name: 'Mobile Crane Operator', tier: 'advanced', validityYears: 3 },
-  { code: 'IWCF', name: 'IWCF — Well Control', tier: 'advanced', validityYears: 2 },
-] as const satisfies ReadonlyArray<Training>;
-
-type TrainingCode = (typeof TRAININGS)[number]['code'];
-
-function trainingOf(code: TrainingCode): Training {
-  const t = TRAININGS.find((x) => x.code === code);
-  if (!t) throw new Error(`Unknown training code: ${code}`);
-  return t;
-}
-
-const POSITIONS = [
-  'Assistant',
-  'Operator',
-  'Supervisor',
-  'Base Manager',
-  'Tool Man',
-  'Gauge Engineer',
-  'Mechanic',
-  'HSE Advisor',
-] as const;
-type Position = (typeof POSITIONS)[number];
-
-/** Mandatory Training Matrix — transcribed 1:1 from the approved wireframe. */
-const ROLE_MATRIX: Record<Position, ReadonlyArray<TrainingCode>> = {
-  Assistant: ['HSEI', 'H2SI', 'AHA', 'FWI', 'LV', 'HV', 'RNB', 'OPAL'],
-  Operator: ['HSEI', 'H2SI', 'AHA', 'FWI', 'PTWS', 'AGT', 'LV', 'RNB', 'OPAL', 'IWCF'],
-  Supervisor: ['HSEI', 'H2SI', 'AHA', 'LV'],
-  'Base Manager': ['HSEI', 'H2SI', 'AHA', 'LV'],
-  'Tool Man': ['HSEI', 'H2SI', 'AHA', 'LV'],
-  'Gauge Engineer': ['HSEI', 'H2SI', 'AHA', 'FWI', 'LV'],
-  Mechanic: ['HSEI', 'H2SI', 'AHA', 'FWI', 'LV'],
-  'HSE Advisor': ['HSEI', 'H2SI', 'AHA', 'FWI', 'AGT', 'LV'],
-};
-
-/** Entry grade per the promotion ladders. Assistant, Operator and Supervisor
- *  each span the full C → B → A ladder (entry at C). */
-const START_GRADE: Record<Position, Grade> = {
-  Assistant: 'C',
-  Operator: 'C',
-  Supervisor: 'C',
-  'Base Manager': 'B',
-  'Tool Man': 'C',
-  'Gauge Engineer': 'C',
-  Mechanic: 'C',
-  'HSE Advisor': 'C',
-};
-
-/* ── demo employees (production: fetched + Zod-parsed from Supabase) ── */
-
-type CertRecord = { issued: string; expiry: string };
-
-type Employee = {
-  id: string;
-  name: string;
-  position: Position;
-  project: string;
-  hired: string;
-  certs: Partial<Record<TrainingCode, CertRecord>>;
-};
-
-const EMPLOYEES: ReadonlyArray<Employee> = [
-  {
-    id: 'e-10247',
-    name: 'Ahmed Al-Harthy',
-    position: 'Operator',
-    project: 'OQ',
-    hired: '2024-10-01',
-    certs: {
-      HSEI: { issued: '2025-06-10', expiry: '2027-06-10' },
-      H2SI: { issued: '2025-06-12', expiry: '2027-06-12' },
-      AHA: { issued: '2024-11-02', expiry: '2026-11-02' },
-      FWI: { issued: '2025-01-15', expiry: '2027-01-15' },
-      PTWS: { issued: '2025-03-20', expiry: '2027-03-20' },
-      LV: { issued: '2024-10-20', expiry: '2027-10-20' },
-      AGT: { issued: '2025-08-01', expiry: '2027-08-01' },
-      RNB: { issued: '2024-12-01', expiry: '2027-12-01' },
-      IWCF: { issued: '2024-09-05', expiry: '2026-09-05' },
-      // OPAL not on file — the one certificate between Ahmed and grade A.
-    },
-  },
-  {
-    id: 'e-10118',
-    name: 'Fatima Al-Balushi',
-    position: 'Supervisor',
-    project: 'Oxy Oman',
-    hired: '2019-05-20',
-    certs: {
-      HSEI: { issued: '2025-02-11', expiry: '2027-02-11' },
-      H2SI: { issued: '2025-04-02', expiry: '2027-04-02' },
-      AHA: { issued: '2024-08-20', expiry: '2026-08-20' },
-      LV: { issued: '2024-06-15', expiry: '2027-06-15' },
-    },
-  },
-  {
-    id: 'e-10391',
-    name: 'Khalid Al-Saadi',
-    position: 'Assistant',
-    project: 'OQ',
-    hired: '2026-03-15',
-    certs: {
-      HSEI: { issued: '2026-03-18', expiry: '2028-03-18' },
-      H2SI: { issued: '2026-03-19', expiry: '2028-03-19' },
-      FWI: { issued: '2026-04-02', expiry: '2028-04-02' },
-      LV: { issued: '2026-05-06', expiry: '2029-05-06' },
-      // AHA missing → the basic tier is open, so the grade is still forming.
-    },
-  },
-  {
-    id: 'e-10052',
-    name: 'Salim Al-Rashdi',
-    position: 'Base Manager',
-    project: 'OQ',
-    hired: '2016-02-10',
-    certs: {
-      HSEI: { issued: '2025-05-01', expiry: '2027-05-01' },
-      H2SI: { issued: '2025-05-02', expiry: '2027-05-02' },
-      AHA: { issued: '2025-06-15', expiry: '2027-06-15' },
-      LV: { issued: '2024-10-01', expiry: '2027-10-01' },
-    },
-  },
-  {
-    id: 'e-10176',
-    name: 'Yusuf Al-Amri',
-    position: 'Tool Man',
-    project: 'Oxy Oman',
-    hired: '2021-03-20',
-    certs: {
-      HSEI: { issued: '2025-03-01', expiry: '2027-03-01' },
-      H2SI: { issued: '2025-03-02', expiry: '2027-03-02' },
-      AHA: { issued: '2024-08-10', expiry: '2026-08-10' }, // expiring within 90 days
-      LV: { issued: '2024-07-20', expiry: '2027-07-20' },
-    },
-  },
-  {
-    id: 'e-10233',
-    name: 'Nasser Al-Hinai',
-    position: 'Gauge Engineer',
-    project: 'OQ',
-    hired: '2024-01-15',
-    certs: {
-      HSEI: { issued: '2025-02-01', expiry: '2027-02-01' },
-      H2SI: { issued: '2025-02-02', expiry: '2027-02-02' },
-      AHA: { issued: '2025-01-10', expiry: '2027-01-10' },
-      FWI: { issued: '2025-03-05', expiry: '2027-03-05' },
-      LV: { issued: '2024-06-01', expiry: '2027-06-01' },
-    },
-  },
-  {
-    id: 'e-10299',
-    name: 'Maryam Al-Zadjali',
-    position: 'HSE Advisor',
-    project: 'Oxy Oman',
-    hired: '2020-11-01',
-    certs: {
-      HSEI: { issued: '2025-04-01', expiry: '2027-04-01' },
-      H2SI: { issued: '2025-04-02', expiry: '2027-04-02' },
-      AHA: { issued: '2025-05-01', expiry: '2027-05-01' },
-      FWI: { issued: '2025-04-10', expiry: '2027-04-10' },
-      AGT: { issued: '2023-01-01', expiry: '2025-01-01' }, // expired advanced cert
-      LV: { issued: '2024-08-01', expiry: '2027-08-01' },
-    },
-  },
-  {
-    id: 'e-10405',
-    name: 'Omar Al-Farsi',
-    position: 'Mechanic',
-    project: 'OQ',
-    hired: '2025-09-01',
-    certs: {
-      HSEI: { issued: '2025-10-01', expiry: '2027-10-01' },
-      H2SI: { issued: '2025-10-02', expiry: '2027-10-02' },
-      AHA: { issued: '2025-11-01', expiry: '2027-11-01' },
-      FWI: { issued: '2025-10-15', expiry: '2027-10-15' },
-      LV: { issued: '2025-09-20', expiry: '2028-09-20' },
-    },
-  },
-  {
-    id: 'e-10087',
-    name: 'Aisha Al-Harthy',
-    position: 'Operator',
-    project: 'Oxy Oman',
-    hired: '2020-06-01',
-    certs: {
-      HSEI: { issued: '2025-06-01', expiry: '2027-06-01' },
-      H2SI: { issued: '2025-06-02', expiry: '2027-06-02' },
-      AHA: { issued: '2025-05-20', expiry: '2027-05-20' },
-      FWI: { issued: '2025-04-01', expiry: '2027-04-01' },
-      PTWS: { issued: '2025-03-01', expiry: '2027-03-01' },
-      AGT: { issued: '2025-02-01', expiry: '2027-02-01' },
-      LV: { issued: '2024-08-01', expiry: '2027-08-01' },
-      RNB: { issued: '2024-09-01', expiry: '2027-09-01' },
-      OPAL: { issued: '2024-10-01', expiry: '2027-10-01' },
-      IWCF: { issued: '2025-01-01', expiry: '2027-01-01' },
-    },
-  },
-];
-
-/* ── the engine (pure functions — move to the server unchanged) ─────── */
-
-const MS_YEAR = 365.25 * 24 * 60 * 60 * 1000;
-const EXPIRING_DAYS = 90;
-
-function parseISO(iso: string): Date {
-  return new Date(`${iso}T00:00:00`);
-}
-function daysUntil(iso: string, now: Date): number {
-  return Math.floor((parseISO(iso).getTime() - now.getTime()) / 86_400_000);
-}
-function yearsSince(iso: string, now: Date): number {
-  return (now.getTime() - parseISO(iso).getTime()) / MS_YEAR;
-}
-function fmtDate(iso: string): string {
-  return parseISO(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-function todayISO(now: Date): string {
-  return now.toISOString().slice(0, 10);
-}
-/** Certificate expiry = issue date + the course's validity window. */
-function addYearsISO(iso: string, years: number): string {
-  const d = parseISO(iso);
-  d.setFullYear(d.getFullYear() + years);
-  return d.toISOString().slice(0, 10);
-}
-
-type CertStatus = 'valid' | 'expiring' | 'expired' | 'missing';
-
-function statusOf(rec: CertRecord | undefined, now: Date): CertStatus {
-  if (!rec) return 'missing';
-  const d = daysUntil(rec.expiry, now);
-  if (d < 0) return 'expired';
-  if (d <= EXPIRING_DAYS) return 'expiring';
-  return 'valid';
-}
-
-/** One required training resolved against the (possibly simulated) record. */
-type CertView = {
-  code: TrainingCode;
-  training: Training;
-  status: CertStatus;
-  rec: CertRecord | null;
-  simulated: boolean;
-};
-
-const isHeld = (s: CertStatus): boolean => s === 'valid' || s === 'expiring';
-
-function tierComplete(views: ReadonlyArray<CertView>, tier: Tier): boolean {
-  return views.filter((v) => v.training.tier === tier).every((v) => isHeld(v.status));
-}
-
-/** Training axis: C when required basics are in date, B adds intermediates,
- *  A means every required certificate is in date. null = basics still open. */
-function trainingLevel(views: ReadonlyArray<CertView>): Grade | null {
-  if (!tierComplete(views, 'basic')) return null;
-  if (!tierComplete(views, 'intermediate')) return 'C';
-  return tierComplete(views, 'advanced') ? 'A' : 'B';
-}
-
-function experienceLevel(years: number): Grade {
-  return years >= 3 ? 'A' : years >= 1 ? 'B' : 'C';
-}
-
-const gi = (g: Grade): number => GRADE_ORDER.indexOf(g);
-
-function computeGrade(training: Grade | null, experience: Grade, start: Grade): Grade | null {
-  if (training === null) return null;
-  const floor = Math.max(Math.min(gi(training), gi(experience)), gi(start));
-  return GRADE_ORDER[floor] ?? null;
-}
-
-const EXP_YEARS_FOR: Record<Grade, number> = { C: 0, B: 1, A: 3 };
-/** Tiers that must be in date to hold a given grade on the training axis. */
-const TIERS_FOR: Record<Grade, ReadonlyArray<Tier>> = {
-  C: ['basic'],
-  B: ['basic', 'intermediate'],
-  A: ['basic', 'intermediate', 'advanced'],
-};
-
-/** Non-simulated resolution of a role's required certs. Used by the recorder's
- *  live grade preview (the engine section builds its own views with sim overrides). */
-function plainViews(
-  position: Position,
-  certs: Partial<Record<TrainingCode, CertRecord>>,
-  now: Date,
-): CertView[] {
-  return ROLE_MATRIX[position].map((code) => {
-    const training = trainingOf(code);
-    const rec = certs[code] ?? null;
-    return { code, training, status: statusOf(rec ?? undefined, now), rec, simulated: false };
-  });
-}
-function gradeFromCerts(
-  emp: Employee,
-  certs: Partial<Record<TrainingCode, CertRecord>>,
-  years: number,
-  now: Date,
-): Grade | null {
-  return computeGrade(
-    trainingLevel(plainViews(emp.position, certs, now)),
-    experienceLevel(years),
-    START_GRADE[emp.position],
-  );
-}
-
-/* ── page chrome ────────────────────────────────────────────────────── */
-
-type RailItem = { id: string; label: string; to?: string; active?: boolean };
-const RAIL_ITEMS: RailItem[] = [
-  { id: 'home', label: 'Dashboard', to: '/dashboard' },
-  { id: 'people', label: 'Employees', to: '/employees/new' },
-  { id: 'book', label: 'Training & Competency', to: '/training', active: true },
-  { id: 'shield', label: 'Compliance' },
-  { id: 'chart', label: 'Analytics', to: '/dashboard/analytics' },
-  { id: 'cog', label: 'Settings' },
-];
-
-function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
-  const s = parts.map((w) => w.charAt(0)).join('').toUpperCase();
-  return s === '' ? '—' : s;
-}
-
-/* ════════════════════════════════════════════════════════════════════ */
-
-type SimState = { years: number; overrides: Partial<Record<TrainingCode, boolean>> };
-type WalletFilter = 'all' | CertStatus;
+/* ── domain: types, data, and the grade engine live in sibling modules ─ */
+import type {
+  CertRecord,
+  CertStatus,
+  CertView,
+  Employee,
+  Grade,
+  SimState,
+  TrainingCode,
+  WalletFilter,
+} from './Competency.types';
+import {
+  EMPLOYEES,
+  EXP_YEARS_FOR,
+  GRADE_ORDER,
+  MS_YEAR,
+  RAIL_ITEMS,
+  ROLE_MATRIX,
+  START_GRADE,
+  TIER_LABEL,
+  TIERS_FOR,
+  TRAININGS,
+} from './Competency.data';
+import {
+  addYearsISO,
+  computeGrade,
+  daysUntil,
+  experienceLevel,
+  fmtDate,
+  gi,
+  gradeFromCerts,
+  initialsOf,
+  isHeld,
+  parseISO,
+  statusOf,
+  todayISO,
+  trainingLevel,
+  trainingOf,
+  yearsSince,
+} from './Competency.logic';
 
 export default function Competency() {
   const [dark, setDark] = useState<boolean>(
@@ -412,6 +96,10 @@ export default function Competency() {
   const [empId, setEmpId] = useState<string>(EMPLOYEES[0]?.id ?? '');
   const [sim, setSim] = useState<SimState | null>(null);
   const [filter, setFilter] = useState<WalletFilter>('all');
+  const [step, setStep] = useState(0);
+  // Manual grade overrides, keyed by employee id. An entry pins the grade by
+  // hand and wins over the computed value until it's reset (see §Grade Engine).
+  const [overrideByEmp, setOverrideByEmp] = useState<Record<string, Grade>>({});
 
   const emp = EMPLOYEES.find((e) => e.id === empId) ?? EMPLOYEES[0];
   if (!emp) return null; // demo roster is never empty; satisfies the type-level check
@@ -441,10 +129,15 @@ export default function Competency() {
   const trainingLv = trainingLevel(views);
   const expLv = experienceLevel(years);
   const startGrade = START_GRADE[emp.position];
-  const grade = computeGrade(trainingLv, expLv, startGrade);
+  const computedGrade = computeGrade(trainingLv, expLv, startGrade);
+  // A supervisor may pin the grade by hand; that override wins over the engine
+  // until it's reset. The computed value is kept alongside so the UI can show
+  // both and reset cleanly — nothing is hidden.
+  const override = overrideByEmp[emp.id];
+  const overridden = override !== undefined;
+  const grade = override ?? computedGrade;
 
   const heldCount = views.filter((v) => isHeld(v.status)).length;
-  const expiringCount = views.filter((v) => v.status === 'expiring').length;
 
   // ── path to the next grade ──
   const next: Grade | null = grade === null ? 'C' : GRADE_ORDER[gi(grade) + 1] ?? null;
@@ -474,7 +167,7 @@ export default function Competency() {
   const gradeByEmp: Record<string, Grade | null> = Object.fromEntries(
     EMPLOYEES.map((e) => [
       e.id,
-      gradeFromCerts(e, certsByEmp[e.id] ?? e.certs, yearsSince(e.hired, now), now),
+      overrideByEmp[e.id] ?? gradeFromCerts(e, certsByEmp[e.id] ?? e.certs, yearsSince(e.hired, now), now),
     ]),
   );
 
@@ -500,7 +193,30 @@ export default function Competency() {
     });
   };
 
+  const setOverride = (g: Grade) => {
+    setOverrideByEmp((prev) => ({ ...prev, [emp.id]: g }));
+  };
+  const clearOverride = () => {
+    setOverrideByEmp((prev) => {
+      const next = { ...prev };
+      delete next[emp.id];
+      return next;
+    });
+  };
+
   const simActive = sim !== null;
+
+  // ── section wizard (mirrors the Add Employee page) ──
+  const STEPS = [
+    { eyebrow: 'Step 1', title: 'Record' },
+    { eyebrow: 'Step 2', title: 'Grade' },
+    { eyebrow: 'Step 3', title: 'Certificates' },
+    { eyebrow: 'Step 4', title: 'Runway' },
+  ] as const;
+  const LAST = STEPS.length - 1;
+  const go = (n: number) => setStep(Math.max(0, Math.min(LAST, n)));
+  const railLeft = `${100 / (2 * STEPS.length)}%`;
+  const railWidth = `${(100 * LAST) / STEPS.length}%`;
 
   return (
     <div
@@ -518,7 +234,7 @@ export default function Competency() {
             <Link to="/dashboard" className="rounded-[2px] px-2.5 py-1.5 text-[color:var(--color-ink-2)] hover:bg-[color:var(--color-paper-3)]">
               Overview
             </Link>
-            <Link to="/employees/new" className="rounded-[2px] px-2.5 py-1.5 text-[color:var(--color-ink-2)] hover:bg-[color:var(--color-paper-3)]">
+            <Link to="/employees" className="rounded-[2px] px-2.5 py-1.5 text-[color:var(--color-ink-2)] hover:bg-[color:var(--color-paper-3)]">
               Employees
             </Link>
             <span className="rounded-[2px] bg-[color:var(--color-ink)] px-2.5 py-1.5 text-[color:var(--color-paper)]">
@@ -583,7 +299,7 @@ export default function Competency() {
                 <span className="text-[color:var(--color-ink)]">Competency Engine</span>
               </div>
               <h1 className="display mt-3 text-[clamp(1.9rem,3.2vw,2.7rem)] leading-[1.1] text-[color:var(--color-ink)]">
-                Competency, <span className="serif-italic text-[color:var(--color-sgs-ink)]">computed.</span>
+                Competency
               </h1>
               <p className="mt-1.5 max-w-[620px] text-[13.5px] leading-relaxed text-[color:var(--color-ink-2)]">
                 Add the employee once — the C · B · A grade resolves itself from live certificates and time in
@@ -600,17 +316,67 @@ export default function Competency() {
             </div>
           </div>
 
+          {/* ── section stepper ── */}
+          <nav className="mt-8 select-none" aria-label="Competency sections">
+            <div className="relative flex items-start justify-between">
+              <div className="absolute top-[17px] h-[2px] rounded-full bg-[color:var(--color-rule-soft)]" style={{ left: railLeft, width: railWidth }} />
+              <motion.div
+                className="emp-progress-glow absolute top-[17px] h-[2px] rounded-full bg-[color:var(--color-sgs)]"
+                style={{ left: railLeft }}
+                animate={{ width: `calc(${railWidth} * ${LAST ? step / LAST : 0})` }}
+                transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
+              />
+              {STEPS.map((s, i) => {
+                const done = i < step;
+                const active = i === step;
+                return (
+                  <button
+                    key={s.title}
+                    type="button"
+                    onClick={() => go(i)}
+                    className="group relative z-10 flex flex-1 flex-col items-center gap-2 text-center"
+                  >
+                    <span
+                      className={`grid h-9 w-9 place-items-center rounded-full border text-[12px] font-semibold transition-all ${
+                        active
+                          ? 'emp-step-on border-[color:var(--color-sgs)] bg-[color:var(--color-sgs)] text-white'
+                          : done
+                            ? 'border-[color:var(--color-sgs)] bg-[color:var(--color-paper)] text-[color:var(--color-sgs-ink)]'
+                            : 'border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] text-[color:var(--color-ink-3)] group-hover:border-[color:var(--color-rule)]'
+                      }`}
+                    >
+                      {done ? (
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 12l5 5L20 7" />
+                        </svg>
+                      ) : (
+                        i + 1
+                      )}
+                    </span>
+                    <span className="hidden min-w-0 flex-col sm:flex">
+                      <span className="mono text-[9px] tracking-[0.16em] text-[color:var(--color-ink-3)] uppercase">{s.eyebrow}</span>
+                      <span className={`text-[12px] ${active ? 'font-semibold text-[color:var(--color-ink)]' : 'text-[color:var(--color-ink-2)]'}`}>{s.title}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+
           {/* ══ ⓪ RECORD CERTIFICATE ══ */}
-          <RecordCertificate
-            roster={EMPLOYEES}
-            currentEmpId={emp.id}
-            certsByEmp={certsByEmp}
-            now={now}
-            onRegister={registerCert}
-            onFocusEmployee={pickEmployee}
-          />
+          {step === 0 && (
+            <RecordCertificate
+              roster={EMPLOYEES}
+              currentEmpId={emp.id}
+              certsByEmp={certsByEmp}
+              now={now}
+              onRegister={registerCert}
+              onFocusEmployee={pickEmployee}
+            />
+          )}
 
           {/* ══ ① THE GRADE ENGINE ══ */}
+          {step === 1 && (
           <motion.section
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -672,9 +438,14 @@ export default function Competency() {
 
               {/* the dial */}
               <div className="flex flex-col items-center justify-center">
-                <GradeDial grade={grade} />
+                <GradeDial grade={grade} overridden={overridden} />
                 <p className="mt-3 max-w-[300px] text-center text-[12.5px] leading-relaxed text-[color:var(--color-ink-2)]">
-                  {grade === null ? (
+                  {overridden ? (
+                    <>
+                      Set to <b>{grade}</b> by hand — overriding the engine's{' '}
+                      <b>{computedGrade ?? 'forming'}</b>. Reset below to hand control back.
+                    </>
+                  ) : grade === null ? (
                     <>Grade still forming — complete the basic tier to enter at {startGrade}.</>
                   ) : limiting === 'training' ? (
                     <>
@@ -715,26 +486,62 @@ export default function Competency() {
                   sub="Bands — C: under 1 yr · B: 1–3 yrs · A: over 3 yrs"
                   markers
                 />
-                <div className="flex items-center gap-2.5 rounded-[1rem] border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper-2)]/60 px-4 py-3">
-                  <span className="mono grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border border-[color:var(--color-ink-3)] text-[10px] text-[color:var(--color-ink-2)]">
-                    =
-                  </span>
-                  <p className="text-[12px] leading-relaxed text-[color:var(--color-ink-2)]">
-                    The grade takes the <b>lower</b> axis — both criteria must be met, per the SGS rubric.
-                  </p>
-                </div>
-                {expiringCount > 0 && !simActive && (
-                  <div className="flex items-center gap-2.5 rounded-[1rem] border border-[oklch(0.68_0.13_70)]/40 bg-[oklch(0.68_0.13_70)]/10 px-4 py-3 text-[12px] text-[color:var(--color-ink)]">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[oklch(0.68_0.13_70)]" />
-                    {expiringCount} certificate{expiringCount > 1 ? 's' : ''} expiring within {EXPIRING_DAYS} days —
-                    renewal protects the current grade.
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* simulator strip */}
+            {/* manual grade override */}
             <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-[1.2rem] border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper-2)]/50 px-5 py-4">
+              <div className="flex items-center gap-3">
+                <span className="text-[13px] font-medium text-[color:var(--color-ink)]">Manual grade</span>
+                <span className="mono text-[9.5px] tracking-[0.16em] text-[color:var(--color-ink-3)] uppercase">
+                  Supervisor override
+                </span>
+              </div>
+              <div className="emp-fieldgroup flex rounded-[0.7rem] border p-1">
+                {GRADE_ORDER.map((g) => {
+                  const on = grade === g;
+                  return (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setOverride(g)}
+                      aria-pressed={on}
+                      className="mono relative isolate h-[38px] w-14 rounded-[0.55rem] text-[13px] font-semibold"
+                    >
+                      {on && (
+                        <motion.span
+                          layoutId="override-pill"
+                          className="emp-btn-primary absolute inset-0 -z-10 rounded-[0.55rem]"
+                          transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                        />
+                      )}
+                      <span className={on ? 'text-white' : 'text-[color:var(--color-ink-2)]'}>{g}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {overridden ? (
+                <div className="flex items-center gap-3">
+                  <span className="mono rounded-full bg-[color:var(--color-sgs)]/12 px-3 py-1.5 text-[9.5px] tracking-[0.16em] text-[color:var(--color-sgs-ink)] uppercase">
+                    Overridden · computed {computedGrade ?? '—'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={clearOverride}
+                    className="rounded-full border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] px-3.5 py-1.5 text-[12px] text-[color:var(--color-ink)] transition-colors hover:border-[color:var(--color-ink)]"
+                  >
+                    Reset to computed
+                  </button>
+                </div>
+              ) : (
+                <span className="text-[12px] text-[color:var(--color-ink-3)]">
+                  Pin a grade to override the engine — it holds until you reset.
+                </span>
+              )}
+            </div>
+
+            {/* simulator strip */}
+            <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-[1.2rem] border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper-2)]/50 px-5 py-4">
               <button
                 type="button"
                 role="switch"
@@ -780,9 +587,6 @@ export default function Competency() {
                       {sim.years.toFixed(1)} y
                     </span>
                   </div>
-                  <span className="text-[12px] text-[color:var(--color-ink-3)]">
-                    Click any certificate below to flip it.
-                  </span>
                   <button
                     type="button"
                     onClick={() => setSim({ years: actualYears, overrides: {} })}
@@ -794,15 +598,13 @@ export default function Competency() {
                     Simulation — nothing is saved
                   </span>
                 </>
-              ) : (
-                <span className="text-[12.5px] text-[color:var(--color-ink-3)]">
-                  Flip certificates and scrub tenure to preview exactly when the next grade unlocks.
-                </span>
-              )}
+              ) : null}
             </div>
           </motion.section>
+          )}
 
           {/* ══ ② CERTIFICATE WALLET ══ */}
+          {step === 2 && (
           <motion.section
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -856,8 +658,10 @@ export default function Competency() {
               )}
             </div>
           </motion.section>
+          )}
 
           {/* ══ ③ PROMOTION RUNWAY ══ */}
+          {step === 3 && (
           <motion.section
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1017,6 +821,42 @@ export default function Competency() {
               </div>
             </div>
           </motion.section>
+          )}
+
+          {/* ── wizard nav ── */}
+          <div className="emp-glassbar sticky bottom-5 z-30 mt-7 flex items-center justify-between gap-4 rounded-full px-3.5 py-3">
+            <button
+              type="button"
+              onClick={() => go(step - 1)}
+              disabled={step === 0}
+              className="inline-flex items-center gap-2 rounded-full border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] px-4 py-2.5 text-[13px] text-[color:var(--color-ink)] transition-colors hover:border-[color:var(--color-ink)] disabled:pointer-events-none disabled:opacity-40"
+            >
+              <span aria-hidden>←</span> Back
+            </button>
+            <div className="mono hidden text-[11px] tracking-[0.14em] text-[color:var(--color-ink-3)] uppercase sm:block">
+              Step {step + 1} / {STEPS.length} · <span className="text-[color:var(--color-ink)]">{STEPS[step]?.title}</span>
+            </div>
+            {step < LAST ? (
+              <button
+                type="button"
+                onClick={() => go(step + 1)}
+                className="emp-btn-primary group inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-[13px] font-semibold text-white"
+              >
+                Next{' '}
+                <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">
+                  →
+                </span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => go(0)}
+                className="inline-flex items-center gap-2 rounded-full border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] px-5 py-2.5 text-[13px] text-[color:var(--color-ink)] transition-colors hover:border-[color:var(--color-ink)]"
+              >
+                <span aria-hidden>↺</span> Start over
+              </button>
+            )}
+          </div>
 
           <p className="mono mt-6 text-[10px] tracking-[0.16em] text-[color:var(--color-ink-4)] uppercase">
             Demo data · engine runs client-side — production persists employees, certificates and grade snapshots in
@@ -1055,10 +895,10 @@ function RecordCertificate({
 }) {
   const [empId, setEmpId] = useState<string>(currentEmpId);
   const [code, setCode] = useState<TrainingCode | ''>('');
-  const [result, setResult] = useState<'pass' | 'fail'>('pass');
   const [issued, setIssued] = useState<string>(todayISO(now));
   const [fileName, setFileName] = useState<string>('');
   const [done, setDone] = useState<{ code: TrainingCode; grade: Grade | null; passed: boolean } | null>(null);
+  const result = 'pass' as const;
 
   const emp = roster.find((e) => e.id === empId) ?? roster.find((e) => e.id === currentEmpId) ?? roster[0];
   if (!emp) return null;
@@ -1072,23 +912,22 @@ function RecordCertificate({
 
   const before = gradeFromCerts(emp, certs, years, now);
   const projected =
-    result === 'pass' && code && expiry
+    code && expiry
       ? gradeFromCerts(emp, { ...certs, [code]: { issued, expiry } }, years, now)
       : before;
   const promotes = before !== projected;
 
-  const canSubmit = code !== '' && issued !== '' && (result === 'fail' || fileName !== '');
+  const canSubmit = code !== '' && issued !== '' && fileName !== '';
 
   const resetFields = () => {
     setCode('');
-    setResult('pass');
     setIssued(todayISO(now));
     setFileName('');
   };
 
   const submit = () => {
-    if (!canSubmit) return; // canSubmit implies code !== '' (aliased narrowing)
-    if (result === 'pass' && expiry !== '') {
+    if (!canSubmit) return; // canSubmit already narrows `code` to TrainingCode
+    if (expiry !== '') {
       onRegister(emp.id, code, issued, expiry);
       onFocusEmployee(emp.id);
       setDone({ code, grade: projected, passed: true });
@@ -1177,35 +1016,6 @@ function RecordCertificate({
           </div>
         </label>
 
-        {/* result */}
-        <div className="block">
-          <span className="mb-2 block text-[12.5px] font-medium text-[color:var(--color-ink)]">
-            Result <span className="text-[color:var(--color-sgs)]">*</span>
-          </span>
-          <div className="emp-fieldgroup flex rounded-[0.7rem] border p-1">
-            {(['pass', 'fail'] as const).map((r) => {
-              const on = result === r;
-              return (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setResult(r)}
-                  className="mono relative isolate h-[38px] flex-1 rounded-[0.55rem] text-[11px] font-semibold tracking-[0.12em] uppercase"
-                >
-                  {on && (
-                    <motion.span
-                      layoutId="result-pill"
-                      className={`absolute inset-0 -z-10 rounded-[0.55rem] ${r === 'pass' ? 'emp-btn-primary' : 'bg-[oklch(0.55_0.17_28)]'}`}
-                      transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-                    />
-                  )}
-                  <span className={on ? 'text-white' : 'text-[color:var(--color-ink-2)]'}>{r}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         {/* issue date */}
         <label className="block">
           <span className="mb-2 block text-[12.5px] font-medium text-[color:var(--color-ink)]">Issue date</span>
@@ -1235,8 +1045,7 @@ function RecordCertificate({
       {/* file drop */}
       <div className="mt-5">
         <span className="mb-2 flex items-center text-[12.5px] font-medium text-[color:var(--color-ink)]">
-          Certificate file {result === 'pass' && <span className="ml-0.5 text-[color:var(--color-sgs)]">*</span>}
-          {result === 'fail' && <span className="mono ml-2 text-[9px] tracking-[0.14em] text-[color:var(--color-ink-4)] uppercase">optional on fail</span>}
+          Certificate file <span className="ml-0.5 text-[color:var(--color-sgs)]">*</span>
         </span>
         <MiniDrop fileName={fileName} onPick={setFileName} onClear={() => setFileName('')} />
       </div>
@@ -1636,7 +1445,7 @@ function highlight(name: string, q: string): ReactNode {
 }
 
 /** Semicircular C → B → A dial with a sprung needle and a flip-in grade. */
-function GradeDial({ grade }: { grade: Grade | null }) {
+function GradeDial({ grade, overridden = false }: { grade: Grade | null; overridden?: boolean }) {
   const CX = 130;
   const CY = 128;
   const R = 100;
@@ -1726,7 +1535,7 @@ function GradeDial({ grade }: { grade: Grade | null }) {
           </motion.span>
         </AnimatePresence>
         <span className="mono mt-1 text-[8.5px] tracking-[0.24em] text-[color:var(--color-ink-3)] uppercase">
-          {grade === null ? 'Forming' : 'Computed grade'}
+          {grade === null ? 'Forming' : overridden ? 'Manual grade' : 'Computed grade'}
         </span>
       </div>
     </div>

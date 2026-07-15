@@ -1,0 +1,85 @@
+/*
+  Employees directory + profile extras — scoped to `.dir-page`, layered on the
+  registry tokens (dashboard.css) and the premium form skin (employee-form.css,
+  which supplies the ambient copper washes, field wells, avatar, glass bar and
+  gradient buttons). Nothing here leaks outside `.dir-page`.
+*/
+
+/* ── Directory table: quiet zebra-free rows that warm on hover ── */
+.dir-page .dir-row {
+  transition: background-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+.dir-page .dir-row:hover {
+  background-color: color-mix(in oklab, var(--color-sgs) 5%, var(--color-paper));
+}
+
+/* Sticky header cells sit on the card, not the page. */
+.dir-page .dir-head th {
+  position: sticky;
+  top: 3.5rem;
+  z-index: 1;
+  background: color-mix(in oklab, var(--color-paper) 92%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+/* ── Grade emblem: a copper coin the profile hero is built around ── */
+.dir-page .grade-coin {
+  background:
+    radial-gradient(120% 120% at 30% 20%, color-mix(in oklab, var(--color-sgs-bright) 90%, white), var(--color-sgs)),
+    var(--color-sgs);
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.35) inset,
+    0 10px 30px -8px color-mix(in oklab, var(--color-sgs) 60%, transparent);
+  color: white;
+}
+.dir-page .grade-coin.is-forming {
+  background: var(--color-paper-3);
+  color: var(--color-ink-3);
+  box-shadow: none;
+}
+
+/* ── Profile hero band: the copper mesh the identity sits on ── */
+.dir-page .profile-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(130% 200% at 88% -40%, color-mix(in oklab, var(--color-sgs) 30%, transparent), transparent 55%),
+    radial-gradient(90% 170% at 4% 130%, color-mix(in oklab, var(--color-sgs-deep) 26%, transparent), transparent 58%),
+    linear-gradient(135deg, color-mix(in oklab, var(--color-sgs) 13%, var(--color-paper)), var(--color-paper));
+  border: 1px solid var(--color-rule-soft);
+  box-shadow: var(--shadow-2), var(--ring-top);
+}
+/* A faint engraved grid, like a field survey sheet, behind the hero. */
+.dir-page .profile-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--color-ink) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--color-ink) 4%, transparent) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: radial-gradient(120% 100% at 100% 0%, black, transparent 70%);
+  -webkit-mask-image: radial-gradient(120% 100% at 100% 0%, black, transparent 70%);
+}
+
+/* Big profile avatar — same copper alloy as the form avatar, scaled up. */
+.dir-page .profile-avatar {
+  background: linear-gradient(150deg, var(--color-sgs-bright), var(--color-sgs-deep));
+  color: white;
+  box-shadow:
+    0 0 0 5px var(--color-paper),
+    0 18px 40px -12px color-mix(in oklab, var(--color-sgs) 55%, transparent);
+}
+
+/* ── Certificate timeline spine ── */
+.dir-page .tl-spine {
+  background: linear-gradient(
+    to bottom,
+    var(--color-rule-soft),
+    color-mix(in oklab, var(--color-sgs) 40%, var(--color-rule-soft)),
+    var(--color-rule-soft)
+  );
+}
+
+/* Life ring / meter stroke helpers reuse the copper accent set in dashboard.css. */

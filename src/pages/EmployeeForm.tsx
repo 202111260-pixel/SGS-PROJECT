@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import Wordmark from '../components/Wordmark';
@@ -22,172 +22,27 @@ import './employee-form.css';
  * right that reacts as the form is filled.
  */
 
-/* ── domain ─────────────────────────────────────────────────────────── */
-
-const POSITIONS = [
-  'Assistant',
-  'Operator',
-  'Supervisor',
-  'Base Manager',
-  'Tool Man',
-  'Gauge Engineer',
-  'Mechanic',
-  'HSE Advisor',
-] as const;
-const GRADES = ['A', 'B', 'C'] as const;
-const PROJECTS = ['OQ', 'Oxy Oman'] as const;
-
-type Position = (typeof POSITIONS)[number];
-type Grade = (typeof GRADES)[number];
-
-/** Only these field-operations roles carry the C → B → A promotion ladder;
- *  every other position is recorded without a grade. */
-const GRADED_POSITIONS = ['Assistant', 'Operator', 'Supervisor'] as const;
-const GRADE_LADDER = ['C', 'B', 'A'] as const; // entry → advanced, left to right
-const GRADE_TIER: Record<Grade, string> = { C: 'Entry', B: 'Intermediate', A: 'Advanced' };
-function hasGradeLadder(p: Position | ''): boolean {
-  return (GRADED_POSITIONS as readonly string[]).includes(p);
-}
-
-type DocKey = 'nationalId';
-type SafetyKey = 'ftw' | 'hse' | 'h2s' | 'ddLight' | 'ddHeavy' | 'ifr' | 'fa';
-
-const OFFICIAL_DOCS: ReadonlyArray<{ key: DocKey; label: string; placeholder: string }> = [
-  { key: 'nationalId', label: 'National ID', placeholder: 'id-card.pdf' },
-];
-
-// FTW (Fit To Work) leads the mandatory safety block — it's the medical
-// clearance every field-operations cert sits behind.
-const SAFETY_CERTS: ReadonlyArray<{ key: SafetyKey; label: string; hint?: string; placeholder: string }> = [
-  { key: 'ftw', label: 'FTW (Fit To Work)', hint: 'Fitness-to-work medical', placeholder: 'ftw.pdf' },
-  { key: 'hse', label: 'HSE', placeholder: 'hse.pdf' },
-  { key: 'h2s', label: 'H2S', placeholder: 'h2s.pdf' },
-  { key: 'ddLight', label: 'DD — Light', hint: 'Defensive Driving', placeholder: 'dd-light.pdf' },
-  { key: 'ddHeavy', label: 'DD — Heavy', hint: 'Defensive Driving', placeholder: 'dd-heavy.pdf' },
-  { key: 'ifr', label: 'IFR', placeholder: 'ifr.pdf' },
-  { key: 'fa', label: 'FA', hint: 'First Aid', placeholder: 'fa.pdf' },
-];
-
-type DocState = { name: string; expiry: string };
-
-type FormState = {
-  fullName: string;
-  employeeNo: string;
-  email: string;
-  mobile: string;
-  position: Position | '';
-  project: string;
-  grade: Grade | '';
-  hireDate: string;
-  cv: string;
-  /** Data URL of the chosen profile photo, or '' for none (initials fallback). */
-  photo: string;
-  docs: Record<DocKey, DocState>;
-  safety: Record<SafetyKey, DocState>;
-};
-
-const emptyDocs = (): Record<DocKey, DocState> => ({
-  nationalId: { name: '', expiry: '' },
-});
-
-const emptySafety = (): Record<SafetyKey, DocState> => ({
-  ftw: { name: '', expiry: '' },
-  hse: { name: '', expiry: '' },
-  h2s: { name: '', expiry: '' },
-  ddLight: { name: '', expiry: '' },
-  ddHeavy: { name: '', expiry: '' },
-  ifr: { name: '', expiry: '' },
-  fa: { name: '', expiry: '' },
-});
-
-const blankForm = (): FormState => ({
-  fullName: '',
-  employeeNo: '',
-  email: '',
-  mobile: '',
-  position: '',
-  project: '',
-  grade: '',
-  hireDate: '',
-  cv: '',
-  photo: '',
-  docs: emptyDocs(),
-  safety: emptySafety(),
-});
-
-// Pre-filled record used when the page is opened in edit mode. In production
-// this is fetched by id and Zod-parsed at the trust boundary (§2/§3); here it
-// stands in for that shape so the edit experience is real.
-const SAMPLE_EMPLOYEE: FormState = {
-  fullName: 'Madelyn Philips',
-  employeeNo: '10241',
-  email: 'madelyn@sgs.com',
-  mobile: '9123 4567',
-  position: 'Operator',
-  project: 'OQ',
-  grade: 'B',
-  hireDate: '2022-01-24',
-  cv: 'CV.pdf',
-  photo: '',
-  docs: {
-    nationalId: { name: 'id-card.pdf', expiry: '2027-03-10' },
-  },
-  safety: {
-    ftw: { name: 'ftw.pdf', expiry: '2026-07-20' },
-    hse: { name: 'hse.pdf', expiry: '2027-02-11' },
-    h2s: { name: 'h2s.pdf', expiry: '2026-09-30' },
-    ddLight: { name: 'dd-light.pdf', expiry: '2026-12-05' },
-    ddHeavy: { name: '', expiry: '' },
-    ifr: { name: 'ifr.pdf', expiry: '2026-08-18' },
-    fa: { name: '', expiry: '' },
-  },
-};
-
-type Errors = Partial<Record<'fullName' | 'employeeNo' | 'email' | 'position' | 'project', string>>;
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function validate(f: FormState): Errors {
-  const e: Errors = {};
-  if (!f.fullName.trim()) e.fullName = 'Full name is required.';
-  if (!f.employeeNo.trim()) e.employeeNo = 'Employee number is required.';
-  if (!f.email.trim()) e.email = 'Email is required.';
-  else if (!EMAIL_RE.test(f.email.trim())) e.email = 'Enter a valid email address.';
-  if (!f.position) e.position = 'Select a position.';
-  if (!f.project) e.project = 'Select a project.';
-  return e;
-}
-
-const TOTAL_DOCS = OFFICIAL_DOCS.length + SAFETY_CERTS.length;
-
-const REQUIRED_KEYS = ['fullName', 'employeeNo', 'email', 'position', 'project'] as const;
-
-/** "MP" from "Madelyn Philips" — the preview card's avatar monogram. */
-function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
-  const s = parts.map((w) => w.charAt(0)).join('').toUpperCase();
-  return s === '' ? '—' : s;
-}
-
-/* ── shared class fragments ─────────────────────────────────────────── */
-
-const inputBase =
-  'w-full rounded-[0.85rem] border bg-[color:var(--color-paper)] px-4 py-3 text-[14px] ' +
-  'text-[color:var(--color-ink)] placeholder:text-[color:var(--color-ink-4)] transition-all ' +
-  'focus:outline-none focus:border-[color:var(--color-sgs)] focus:ring-4 focus:ring-[color:var(--color-sgs)]/12';
-const inputOk = 'border-[color:var(--color-rule-soft)]';
-const inputBad = 'border-[oklch(0.6_0.18_28)]';
-
-type RailItem = { id: string; label: string; to?: string; active?: boolean };
-const RAIL_ITEMS: RailItem[] = [
-  { id: 'home', label: 'Dashboard', to: '/dashboard' },
-  { id: 'people', label: 'Employees', to: '/employees/new', active: true },
-  { id: 'book', label: 'Training & Competency', to: '/training' },
-  { id: 'shield', label: 'Compliance' },
-  { id: 'chart', label: 'Analytics', to: '/dashboard/analytics' },
-  { id: 'cog', label: 'Settings' },
-];
-
+/* ── domain: types, data, and pure logic live in sibling modules ─────── */
+import type { DocState, Errors, FormState, Position } from './EmployeeForm.types';
+import {
+  COMPANY_PROPERTIES,
+  EMAIL_RE,
+  GRADE_LADDER,
+  GRADE_TIER,
+  OFFICIAL_DOCS,
+  POSITIONS,
+  PROJECTS,
+  RAIL_ITEMS,
+  REQUIRED_KEYS,
+  SAFETY_CERTS,
+  SAMPLE_EMPLOYEE,
+  TOTAL_DOCS,
+  blankForm,
+  inputBad,
+  inputBase,
+  inputOk,
+} from './EmployeeForm.data';
+import { calculateServiceYears, hasGradeLadder, initialsOf, validate } from './EmployeeForm.logic';
 /* ════════════════════════════════════════════════════════════════════ */
 
 export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }) {
@@ -209,11 +64,29 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
   const [form, setForm] = useState<FormState>(() => (isEdit ? SAMPLE_EMPLOYEE : blankForm()));
   const [errors, setErrors] = useState<Errors>({});
   const [saved, setSaved] = useState(false);
+  const [companyPropertiesOpen, setCompanyPropertiesOpen] = useState(false);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
     setSaved(false);
     if (key in errors) setErrors((e) => ({ ...e, [key]: undefined }));
+  };
+
+  const setHireDate = (hireDate: string) => {
+    setForm((f) => ({
+      ...f,
+      hireDate,
+      experienceYears: calculateServiceYears(hireDate),
+    }));
+    setSaved(false);
+  };
+
+  const toggleCompanyProperty = (key: 'car' | 'fuelCard' | 'blueKey' | 'companyMobile' | 'companyLaptop') => {
+    setForm((f) => ({
+      ...f,
+      companyProps: { ...f.companyProps, [key]: !f.companyProps[key] },
+    }));
+    setSaved(false);
   };
 
   const setDoc = (group: 'docs' | 'safety', key: string, patch: Partial<DocState>) => {
@@ -230,6 +103,8 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
 
   const requiredComplete = validate(form);
   const isReady = Object.keys(requiredComplete).length === 0;
+  const receivedCompanyProps = COMPANY_PROPERTIES.filter((item) => form.companyProps[item.key]).map((item) => item.label);
+  const calculatedExperienceYears = calculateServiceYears(form.hireDate);
 
   // Live completion for the preview card: 5 required basics + every document.
   const basicsDone = REQUIRED_KEYS.filter((k) => !requiredComplete[k]).length;
@@ -247,7 +122,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
   const LAST = STEPS.length - 1;
 
   const [step, setStep] = useState(0);
-  const go = (n: number) => setStep(Math.max(0, Math.min(LAST, n)));
+  const go = useCallback((n: number) => setStep(Math.max(0, Math.min(LAST, n))), [LAST]);
 
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const panelRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -289,7 +164,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [step]);
+  }, [step, go]);
 
   // Horizontal trackpad wheel → step (throttled, non-passive so it can claim
   // the gesture instead of scrolling the page sideways).
@@ -307,7 +182,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
     };
     vp.addEventListener('wheel', onWheel, { passive: false });
     return () => vp.removeEventListener('wheel', onWheel);
-  }, [step]);
+  }, [step, go]);
 
   const onSave = () => {
     const e = validate(form);
@@ -324,8 +199,6 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
     // Frontend-only: no backend wired yet. In production this POSTs to a
     // Zod-validated route (§2). Here we surface a truthful confirmation.
     setSaved(true);
-    // eslint-disable-next-line no-console
-    console.info('[EmployeeForm] validated payload', form);
   };
 
   // geometry for the stepper's connector line (aligned to circle centres)
@@ -502,9 +375,10 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
             </div>
           </nav>
 
-          <div className="mt-8 flex items-start gap-7">
-            {/* ── wizard column ── */}
-            <div className="min-w-0 flex-1">
+          <div className="mt-8 overflow-x-auto pb-3">
+            <div className="flex min-w-[56rem] items-start gap-7">
+              {/* ── wizard column ── */}
+              <div className="min-w-0 flex-1">
           {/* ── carousel viewport — each section is its own screen ── */}
           <div ref={viewportRef} className="relative overflow-hidden">
             <motion.div
@@ -657,13 +531,89 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     </Field>
                   )}
 
-                  <Field label="Hire Date">
-                    <input
-                      type="date"
-                      value={form.hireDate}
-                      onChange={(e) => set('hireDate', e.target.value)}
-                      className={`${inputBase} tabular ${inputOk}`}
-                    />
+                  <div className="sm:col-span-2 lg:col-span-3">
+                    <div className="rounded-[1rem] border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)]/70 p-4">
+                      <button
+                        type="button"
+                        aria-expanded={companyPropertiesOpen}
+                        aria-controls="company-property-options"
+                        onClick={() => setCompanyPropertiesOpen((open) => !open)}
+                        className="flex w-full items-center justify-between gap-3 rounded-[0.65rem] text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[color:var(--color-sgs)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--color-paper)]"
+                      >
+                        <span className="text-[13px] font-medium text-[color:var(--color-ink)]">Company Property Issuance</span>
+                        <span
+                          aria-hidden="true"
+                          className={`text-[18px] leading-none text-[color:var(--color-ink-4)] transition-transform duration-300 motion-reduce:transition-none ${
+                            companyPropertiesOpen ? 'rotate-180' : ''
+                          }`}
+                        >
+                          ⌄
+                        </span>
+                      </button>
+                      <p className="mt-1 text-[12px] leading-relaxed text-[color:var(--color-ink-3)]">
+                        Click the title to reveal the items the employee receives.
+                      </p>
+                      <motion.div
+                        id="company-property-options"
+                        inert={!companyPropertiesOpen}
+                        initial={false}
+                        animate={{
+                          height: companyPropertiesOpen ? 'auto' : 0,
+                          opacity: companyPropertiesOpen ? 1 : 0,
+                        }}
+                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pt-4">
+                          <p className="mono mb-3 text-[10px] tracking-[0.16em] text-[color:var(--color-ink-4)] uppercase">
+                            {receivedCompanyProps.length} selected
+                          </p>
+                          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            {COMPANY_PROPERTIES.map((item) => {
+                              const active = form.companyProps[item.key];
+                              return (
+                                <button
+                                  key={item.key}
+                                  type="button"
+                                  aria-pressed={active}
+                                  onClick={() => toggleCompanyProperty(item.key)}
+                                  className={`flex items-center justify-between rounded-[0.85rem] border px-3.5 py-3 text-left transition-all ${
+                                    active
+                                      ? 'border-[color:var(--color-sgs)] bg-[color:var(--color-sgs)]/10 text-[color:var(--color-sgs-ink)]'
+                                      : 'border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)] hover:border-[color:var(--color-ink)]'
+                                  }`}
+                                >
+                                  <span className="text-[13px] font-medium">{item.label}</span>
+                                  <span className={`grid h-6 w-6 place-items-center rounded-full border text-[11px] ${
+                                    active
+                                      ? 'border-[color:var(--color-sgs)] bg-[color:var(--color-sgs)] text-white'
+                                      : 'border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] text-[color:var(--color-ink-4)]'
+                                  }`}>
+                                    {active ? '✓' : '○'}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
+
+                  <Field label="Join Date">
+                    <div>
+                      <input
+                        type="date"
+                        value={form.hireDate}
+                        onChange={(e) => setHireDate(e.target.value)}
+                        className={`${inputBase} tabular ${inputOk}`}
+                      />
+                      {calculatedExperienceYears && (
+                        <p className="mt-1.5 text-[11px] leading-relaxed text-[color:var(--color-ink-4)]">
+                          Service time: {calculatedExperienceYears} years, calculated automatically.
+                        </p>
+                      )}
+                    </div>
                   </Field>
 
                   <Field label="CV (PDF)">
@@ -695,7 +645,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     placeholder={d.placeholder}
                     onFile={(n) => setDoc('docs', d.key, { name: n })}
                     onClear={() => setDoc('docs', d.key, { name: '' })}
-                    onExpiry={(v) => setDoc('docs', d.key, { expiry: v })}
+                    onExpiry={(v) => setDoc('docs', d.key, { issueDate: v })}
                   />
                 ))}
               </Section>
@@ -719,7 +669,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     placeholder={c.placeholder}
                     onFile={(n) => setDoc('safety', c.key, { name: n })}
                     onClear={() => setDoc('safety', c.key, { name: '' })}
-                    onExpiry={(v) => setDoc('safety', c.key, { expiry: v })}
+                    onExpiry={(v) => setDoc('safety', c.key, { issueDate: v })}
                   />
                 ))}
                 <p className="mt-4 flex items-start gap-2.5 rounded-[0.7rem] border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper-3)]/50 px-3.5 py-3 text-[12.5px] leading-relaxed text-[color:var(--color-ink-2)]">
@@ -776,6 +726,11 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                   <SummaryRow k="Employee No." v={form.employeeNo || '—'} mono />
                   <SummaryRow k="Position" v={form.position || '—'} />
                   <SummaryRow k="Project" v={form.project || '—'} />
+                  <SummaryRow
+                    k="Company properties"
+                    v={receivedCompanyProps.length ? receivedCompanyProps.join(' · ') : 'None selected'}
+                  />
+                  <SummaryRow k="Experience" v={calculatedExperienceYears ? `${calculatedExperienceYears} yrs` : '—'} />
                   <SummaryRow
                     k="Grade"
                     v={
@@ -886,7 +841,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-              className="sticky top-[4.75rem] hidden w-[330px] shrink-0 xl:block"
+              className="sticky top-[4.75rem] w-[330px] shrink-0"
             >
               <PreviewCard
                 form={form}
@@ -897,6 +852,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                 isReady={isReady}
               />
             </motion.aside>
+          </div>
           </div>
         </main>
       </div>
@@ -1243,7 +1199,7 @@ function DocRow({
         <span className="mb-1.5 block text-[11px] text-[color:var(--color-ink-3)]">Expiry date</span>
         <input
           type="date"
-          value={value.expiry}
+          value={value.issueDate}
           onChange={(e) => onExpiry(e.target.value)}
           className={`${inputBase} tabular ${inputOk}`}
         />

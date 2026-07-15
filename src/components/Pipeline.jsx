@@ -3,7 +3,7 @@ import { useFontsGsap } from '../motion/useFontsGsap'
 import { MaskedLines, FadedWords, CountUp } from '../motion/Reveal'
 import { img } from '../data/content'
 
-const steps = ['Enroll', 'Train', 'Certify', 'Deploy', 'Monitor']
+const steps = ['Register', 'Certify', 'Grade', 'Promote', 'Alert']
 
 function ArrowDot({ dark = false }) {
   return (
@@ -66,12 +66,12 @@ export default function Pipeline() {
           mode="play"
           className="font-display text-ink max-w-[14ch] text-[clamp(2.4rem,5.5vw,5rem)] leading-[1.05] font-bold tracking-tight lg:col-span-7"
         >
-          Every trainee, tracked end-to-end.
+          Every employee, tracked end to end.
         </MaskedLines>
         <FadedWords className="text-ink-soft max-w-[42ch] text-base leading-relaxed lg:col-span-5 lg:justify-self-end">
-          Sponsors do not get a brochure and a goodbye. They get a live record
-          that follows each trainee from the first enrollment form to the
-          monthly report after deployment.
+          Supervisors do not chase spreadsheets. They open one live record that
+          carries each employee from the first profile to the day a certificate
+          is about to expire.
         </FadedWords>
       </div>
 
@@ -95,14 +95,14 @@ export default function Pipeline() {
           </div>
           <div className="absolute right-7 bottom-6 left-7">
             <p className="text-ivory/80 text-xs font-medium tracking-[0.16em] uppercase">
-              01 · Enroll
+              01 · Register
             </p>
             <h3 className="font-display text-ivory mt-2 text-3xl font-medium">
               One record from day one
             </h3>
             <p className="text-ivory/85 mt-2 max-w-[40ch] text-sm leading-relaxed">
-              Profile, sponsor company, target role and program plan, opened the
-              moment a trainee walks in.
+              Profile, position, project, documents, and safety certificates,
+              all created the moment an employee joins.
             </p>
           </div>
         </a>
@@ -121,14 +121,14 @@ export default function Pipeline() {
           <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.22_0.03_55/0.6)] via-transparent to-transparent" />
           <div className="bg-ivory/90 absolute top-5 right-5 max-w-[11rem] rounded-2xl p-4">
             <p className="font-display text-ink text-2xl font-bold">
-              <CountUp value={92} suffix="%" />
+              <CountUp value={94} suffix="%" />
             </p>
             <p className="text-ink-soft mt-1 text-xs leading-snug">
-              average attendance, logged live in session
+              of mandatory certificates in date across the roster
             </p>
           </div>
           <p className="text-ivory absolute bottom-5 left-6 text-xs font-medium tracking-[0.16em] uppercase">
-            02 · Train
+            02 · Certify
           </p>
         </div>
 
@@ -138,16 +138,17 @@ export default function Pipeline() {
           className="bg-sand flex flex-col justify-between rounded-[1.75rem] p-7 lg:col-span-3"
         >
           <span className="border-ink/20 text-ink-soft w-fit rounded-full border px-4 py-1.5 text-xs font-medium">
-            03 · Certify
+            03 · Grade
           </span>
           <p className="font-display text-ink mt-8 text-[1.45rem] leading-snug font-medium">
-            Exams sat on site. Every certificate verified, stored, shareable.
+            The C·B·A grade computes itself from live certificates and time in
+            position.
           </p>
           <a
             href="#contact"
             className="text-copper-deep mt-6 inline-flex items-center gap-2 text-sm font-semibold"
           >
-            View a sample record <span aria-hidden="true">→</span>
+            See the grade engine <span aria-hidden="true">→</span>
           </a>
         </div>
 
@@ -165,12 +166,12 @@ export default function Pipeline() {
           <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.22_0.03_55/0.6)] via-transparent to-transparent" />
           <div className="bg-ivory/90 absolute top-5 left-5 rounded-2xl p-4">
             <p className="font-display text-ink text-2xl font-bold">
-              <CountUp value={4800} suffix="+" />
+              <CountUp value={8} suffix="" />
             </p>
-            <p className="text-ink-soft mt-1 text-xs">deployed to operators</p>
+            <p className="text-ink-soft mt-1 text-xs">roles on the C·B·A ladder</p>
           </div>
           <p className="text-ivory absolute bottom-5 left-6 text-xs font-medium tracking-[0.16em] uppercase">
-            04 · Deploy
+            04 · Promote
           </p>
         </div>
 
@@ -182,14 +183,14 @@ export default function Pipeline() {
         >
           <div className="flex items-start justify-between gap-4">
             <span className="border-ivory/40 text-ivory w-fit rounded-full border px-4 py-1.5 text-xs font-medium">
-              05 · Monitor
+              05 · Alert
             </span>
             <ArrowDot />
           </div>
           <div>
             <p className="font-display text-ivory mt-10 text-[1.6rem] leading-snug font-medium">
-              A report back to you every thirty days, for as long as they are on
-              your site.
+              Every renewal is flagged before it lapses, the moment a certificate
+              enters its 90-day window.
             </p>
             <div className="mt-6 flex items-center gap-3">
               <span className="flex -space-x-2.5">
@@ -204,9 +205,9 @@ export default function Pipeline() {
                 ))}
               </span>
               <span className="text-ivory/90 text-xs leading-snug">
-                340 trainees currently
+                24 certificates expiring
                 <br />
-                under active monitoring
+                in the next 90 days
               </span>
             </div>
           </div>

@@ -2,9 +2,9 @@ import { MaskedLines } from '../motion/Reveal'
 import { img } from '../data/content'
 
 const chips = [
-  { label: 'discipline', speed: '1.18', cls: 'top-[24%] left-[12%] -rotate-6' },
-  { label: 'precision', speed: '0.86', cls: 'top-[30%] right-[14%] rotate-3' },
-  { label: 'endurance', speed: '1.08', cls: 'bottom-[22%] left-[18%] rotate-2' },
+  { label: 'current', speed: '1.18', cls: 'top-[24%] left-[12%] -rotate-6' },
+  { label: 'verifiable', speed: '0.86', cls: 'top-[30%] right-[14%] rotate-3' },
+  { label: 'audit-ready', speed: '1.08', cls: 'bottom-[22%] left-[18%] rotate-2' },
 ]
 
 /**
@@ -31,7 +31,7 @@ export default function ParallaxBreak() {
         data-speed="0.78"
         className="font-display pointer-events-none absolute top-[14%] left-1/2 -translate-x-1/2 text-[clamp(5rem,16vw,15rem)] leading-none font-bold whitespace-nowrap text-transparent select-none [-webkit-text-stroke:1px_oklch(0.97_0.01_85/0.35)]"
       >
-        4,800 strong
+        always current
       </p>
 
       {/* Floating tag chips, ecoshire-style */}
@@ -53,7 +53,7 @@ export default function ParallaxBreak() {
             end="top 55%"
             className="font-display text-ivory text-center text-[clamp(3rem,10vw,9rem)] leading-none font-bold tracking-tight"
           >
-            From classroom
+            From spreadsheets
           </MaskedLines>
         </div>
         <div data-speed="0.88" data-skew>
@@ -63,14 +63,14 @@ export default function ParallaxBreak() {
             end="top 50%"
             className="font-display text-ivory text-center text-[clamp(3.4rem,11.5vw,10.5rem)] leading-none font-bold tracking-tight italic"
           >
-            to rig floor.
+            to one live record.
           </MaskedLines>
         </div>
         <p
           data-speed="1.05"
           className="text-ivory/90 mt-8 text-xs font-medium tracking-[0.18em] uppercase"
         >
-          The journey is the product
+          The record stays current
         </p>
       </div>
     </section>

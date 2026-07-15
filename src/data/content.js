@@ -47,58 +47,58 @@ export const partners = [
   'Baker Hughes',
 ]
 
-export const programs = [
+export const modules = [
   {
-    name: 'HSE & H2S Field Safety',
-    meta: '6 weeks · NEBOSH-aligned',
+    name: 'Employee Registry',
+    meta: 'Profile · position · project · documents',
     image: 'crew',
   },
   {
-    name: 'Well Control & Drilling',
-    meta: '8 weeks · IWCF Level 3',
+    name: 'Certificate Wallet',
+    meta: 'Issue and expiry dates for every required course',
     image: 'welder',
   },
   {
-    name: 'Electrical & Instrumentation',
-    meta: '10 weeks · CompEx certified',
+    name: 'Competency Engine',
+    meta: 'C·B·A calculated from certificates and tenure',
     image: 'engineer',
   },
   {
-    name: 'Mechanical Integrity & Piping',
-    meta: '9 weeks · ASME-aligned',
+    name: 'Promotion Runway',
+    meta: 'Exactly what unlocks the next grade',
     image: 'drawings',
   },
   {
-    name: 'Operations Readiness & Start-up',
-    meta: '12 weeks · OPITO-aligned',
+    name: 'Expiry Alerts',
+    meta: '90-day renewal watch, automatic',
     image: 'pylons',
   },
 ]
 
 export const pipeline = [
   {
-    step: 'Enroll',
-    text: 'One record per trainee from day one: profile, sponsor company, target role, program plan.',
+    step: 'Register',
+    text: 'One record per employee from day one: profile, position, project, documents, and safety certificates.',
     image: 'classroom',
   },
   {
-    step: 'Train',
-    text: 'Instructor-led sessions with attendance, assessments and practicals logged in real time.',
+    step: 'Certify',
+    text: 'Every required certificate is logged with its issue and expiry date, then stored against the employee record.',
     image: 'welder',
   },
   {
-    step: 'Certify',
-    text: 'Accredited exams sat on site. Certificates issued, verified and stored against the record.',
+    step: 'Grade',
+    text: 'The C·B·A competency grade is calculated from valid certificates and time in position.',
     image: 'drawings',
   },
   {
-    step: 'Deploy',
-    text: 'Graduates placed with partner operators, with the full training file handed over at the gate.',
+    step: 'Promote',
+    text: 'The promotion runway shows exactly which certificates and how much tenure unlock the next grade.',
     image: 'crew',
   },
   {
-    step: 'Monitor',
-    text: 'Post-placement performance reviews every thirty days, reported back to the sponsor.',
+    step: 'Alert',
+    text: 'Certificates entering their 90-day window surface automatically on the Alerts page before they lapse.',
     image: 'engineer',
   },
 ]

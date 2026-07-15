@@ -2,8 +2,8 @@ import { useState } from 'react'
 
 const links = [
   ['Home', '#top'],
-  ['Tracking', '#tracking'],
-  ['Partners', '#partners'],
+  ['How it works', '#tracking'],
+  ['Operators', '#partners'],
   ['Contact', '#contact'],
 ]
 

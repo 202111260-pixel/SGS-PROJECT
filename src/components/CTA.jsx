@@ -8,21 +8,22 @@ export default function CTA() {
       <div className="bg-copper rounded-[2rem] px-[clamp(1.5rem,5vw,5rem)] py-[clamp(5rem,10vw,9rem)]">
         <div className="grid items-center gap-x-16 gap-y-14 lg:grid-cols-[1.05fr_1fr]">
           <div>
-            <p className="eyebrow text-ivory/90 mb-8 before:bg-ivory">Start this quarter</p>
+            <p className="eyebrow text-ivory/90 mb-8 before:bg-ivory">Roll it out this quarter</p>
             <div data-skew>
               <MaskedLines
                 as="h2"
                 className="font-display text-ivory max-w-[13ch] text-[clamp(2.8rem,6vw,5.5rem)] leading-[1.03] font-bold tracking-tight"
               >
-                Your next crew is already in class.
+                Your whole workforce, graded live.
               </MaskedLines>
             </div>
             <FadedWords className="text-ivory/90 mt-10 max-w-md text-lg leading-relaxed">
-              Tell us the roles you need to fill. We will map the programs,
-              enroll your candidates, and hand you the tracking dashboard.
+              Bring your roster. We will map every role to its required
+              certificates and give you a dashboard that keeps every grade
+              current.
             </FadedWords>
             <div className="mt-10 flex flex-wrap gap-4">
-              <a href="mailto:enroll@sgs-training.om" className="btn bg-ivory text-ink hover:bg-sand">
+              <a href="mailto:workforce@sgs.com" className="btn bg-ivory text-ink hover:bg-sand">
                 Request a demo
                 <span className="arrow">→</span>
               </a>

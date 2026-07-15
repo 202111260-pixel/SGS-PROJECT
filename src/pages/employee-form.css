@@ -19,7 +19,7 @@
   --color-ink-4: oklch(0.62 0.01 60);
   /* Hairlines a touch lighter so the darker type carries the structure. */
   --color-rule-soft: oklch(0.905 0.008 80);
-  --color-rule: oklch(0.85 0.01 75);
+  --color-rule: oklch(39.233% 0.02169 72.649);
 
   /* Fields sit a hair below the card so they read as inputs, not panels. */
   --color-field: oklch(0.975 0.005 85);

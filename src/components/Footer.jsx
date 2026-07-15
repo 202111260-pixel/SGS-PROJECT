@@ -4,19 +4,19 @@ import SgsLogo from './SgsLogo'
 
 const columns = [
   {
-    title: 'Programs',
+    title: 'Platform',
     span: 'md:col-span-3',
-    items: ['HSE & H2S Safety', 'Well Control', 'Electrical & Instrumentation', 'Mechanical & Piping', 'Operations Readiness'],
+    items: ['Employee registry', 'Certificate wallet', 'Competency engine', 'Promotion runway', 'Expiry alerts'],
   },
   {
     title: 'Company',
     span: 'md:col-span-2',
-    items: ['About SGS', 'Partner operators', 'Accreditations', 'Careers'],
+    items: ['About SGS', 'Projects', 'Accreditations', 'Careers'],
   },
   {
     title: 'Contact',
     span: 'md:col-span-2',
-    items: ['enroll@sgs-training.om', '+968 24 00 00 00', 'Knowledge Oasis, Muscat'],
+    items: ['workforce@sgs.com', '+968 24 00 00 00', 'Knowledge Oasis, Muscat'],
   },
 ]
 
@@ -41,8 +41,8 @@ export default function Footer() {
         <div className="md:col-span-5">
           <SgsLogo className="text-ink h-12 w-auto" aria-label="SGS" />
           <p className="text-ink-soft mt-4 max-w-xs text-sm leading-relaxed">
-            Training management for the energy sector. Enroll, train, certify,
-            deploy, monitor.
+            Workforce competency management for field operations. Register,
+            certify, grade, promote, alert.
           </p>
         </div>
         {columns.map((col) => (
@@ -76,7 +76,7 @@ export default function Footer() {
 
       <div className="border-ink/10 mt-8 flex flex-wrap items-center justify-between gap-4 border-t pt-6">
         <p className="text-ink-soft text-xs">
-          © {new Date().getFullYear()} SGS Training Institute. All rights reserved.
+          © {new Date().getFullYear()} SGS Workforce Systems. All rights reserved.
         </p>
         <p className="text-ink-soft text-xs">Muscat · Sohar · Salalah</p>
       </div>

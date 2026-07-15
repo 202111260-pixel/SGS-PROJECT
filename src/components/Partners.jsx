@@ -31,7 +31,7 @@ export default function Partners() {
   return (
     <section id="partners" ref={scope} className="border-ink/10 border-b py-12">
       <p className="text-ink-soft mb-8 text-center text-xs font-medium tracking-[0.16em] uppercase">
-        Our graduates work with
+        Our workforce operates on projects for
       </p>
       <div
         className="overflow-hidden"
