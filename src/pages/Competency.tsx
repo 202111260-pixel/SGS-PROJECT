@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
-import Wordmark from '../components/Wordmark';
+import NavDock from '../components/NavDock';
 import './dashboard.css';
 import './employee-form.css';
 import './competency.css';
@@ -12,22 +12,23 @@ import './competency.css';
  *
  * The page answers one question, live: “what grade is this employee, and
  * why?” Grades C → B → A are never typed by hand — they are *computed* from
- * two axes, exactly as the SGS rubric defines them:
+ * the mandatory safety certificates:
  *
- *   ① Training  — the certificates REQUIRED FOR THE ROLE (from the Mandatory
- *                 Training Matrix), grouped in tiers basic → intermediate →
- *                 advanced. A tier only counts while its certificates are
- *                 in date.
- *   ② Experience — time in position: < 1y = C band, 1–3y = B band, > 3y = A.
+ *   Training — the seven mandatory safety certificates that apply to EVERY
+ *              position (FTW, HSE, H2S, FA, DD — Light, IFR, DD — Heavy —
+ *              the same block the Add Employee form records), grouped in
+ *              tiers basic → intermediate → advanced. A tier only counts
+ *              while its certificates are in date.
  *
- *   Grade = the LOWER of the two axes (both criteria must be met), floored
- *   at the role's entry grade (a Supervisor enters at B).
+ *   Grade = the highest tier held in date, floored at the role's entry grade
+ *   (a Supervisor enters at B). Time in position is tracked for context but no
+ *   longer caps the grade.
  *
- * The Certificate Wallet below the engine lists ONLY the courses the matrix
- * requires for the employee's position — a Supervisor sees 4 cards, an
- * Operator sees 10. Everything reacts instantly, including a “what-if”
- * simulator that lets a supervisor flip certificates and scrub tenure to see
- * exactly when the next grade unlocks.
+ * The Certificate Wallet below the engine files all seven certificates by
+ * live status — every role carries the same block, so every employee has the
+ * same seven to keep in date. Everything reacts instantly, including a
+ * “what-if” simulator that lets a supervisor flip certificates to see exactly
+ * which ones unlock the next grade.
  *
  * Demo data only — production loads employees + certificates from Supabase
  * (RLS-scoped) and persists grade snapshots server-side; this engine is pure
@@ -47,7 +48,6 @@ import type {
 } from './Competency.types';
 import {
   EMPLOYEES,
-  EXP_YEARS_FOR,
   GRADE_ORDER,
   MS_YEAR,
   RAIL_ITEMS,
@@ -55,7 +55,6 @@ import {
   START_GRADE,
   TIER_LABEL,
   TIERS_FOR,
-  TRAININGS,
 } from './Competency.data';
 import {
   addYearsISO,
@@ -65,15 +64,14 @@ import {
   fmtDate,
   gi,
   gradeFromCerts,
-  initialsOf,
   isHeld,
-  parseISO,
   statusOf,
   todayISO,
   trainingLevel,
   trainingOf,
   yearsSince,
 } from './Competency.logic';
+import { photoOf } from './avatar';
 
 export default function Competency() {
   const [dark, setDark] = useState<boolean>(
@@ -129,7 +127,7 @@ export default function Competency() {
   const trainingLv = trainingLevel(views);
   const expLv = experienceLevel(years);
   const startGrade = START_GRADE[emp.position];
-  const computedGrade = computeGrade(trainingLv, expLv, startGrade);
+  const computedGrade = computeGrade(trainingLv, startGrade);
   // A supervisor may pin the grade by hand; that override wins over the engine
   // until it's reset. The computed value is kept alongside so the UI can show
   // both and reset cleanly — nothing is hidden.
@@ -139,35 +137,20 @@ export default function Competency() {
 
   const heldCount = views.filter((v) => isHeld(v.status)).length;
 
-  // ── path to the next grade ──
+  // ── path to the next grade (certificate-driven) ──
   const next: Grade | null = grade === null ? 'C' : GRADE_ORDER[gi(grade) + 1] ?? null;
   const gapCerts = next
     ? views.filter((v) => TIERS_FOR[next].includes(v.training.tier) && !isHeld(v.status))
     : [];
-  const needYears = next ? EXP_YEARS_FOR[next] : 0;
-  const monthsRemaining = next ? Math.max(0, Math.ceil((needYears - years) * 12)) : 0;
-  const projected = new Date(parseISO(emp.hired).getTime() + needYears * MS_YEAR);
-  const eligible = next !== null && gapCerts.length === 0 && monthsRemaining === 0;
+  const eligible = next !== null && gapCerts.length === 0;
 
-  const limiting: 'training' | 'experience' | 'balanced' =
-    trainingLv === null
-      ? 'training'
-      : gi(trainingLv) < gi(expLv)
-        ? 'training'
-        : gi(expLv) < gi(trainingLv)
-          ? 'experience'
-          : 'balanced';
-
-  const hiddenCount = TRAININGS.length - required.length;
-  const counts: Record<CertStatus, number> = { valid: 0, expiring: 0, expired: 0, missing: 0 };
-  for (const v of views) counts[v.status] += 1;
   const shown = filter === 'all' ? views : views.filter((v) => v.status === filter);
 
   // Grade for every employee (for the search picker's badges).
   const gradeByEmp: Record<string, Grade | null> = Object.fromEntries(
     EMPLOYEES.map((e) => [
       e.id,
-      overrideByEmp[e.id] ?? gradeFromCerts(e, certsByEmp[e.id] ?? e.certs, yearsSince(e.hired, now), now),
+      overrideByEmp[e.id] ?? gradeFromCerts(e, certsByEmp[e.id] ?? e.certs, now),
     ]),
   );
 
@@ -223,53 +206,12 @@ export default function Competency() {
       data-theme={dark ? 'dark' : undefined}
       className="sgs-registry emp-form comp-page min-h-screen bg-[color:var(--color-paper-2)] text-[color:var(--color-ink)]"
     >
-      {/* ── top bar ── */}
-      <header className="sticky top-0 z-40 border-b border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)]/90 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-[1700px] items-center gap-5 px-5 lg:px-7">
-          <a href="/" aria-label="Back to site" className="flex items-center gap-2.5">
-            <Wordmark tone="light" />
-          </a>
-          <span className="hidden h-5 w-px bg-[color:var(--color-rule-soft)] md:block" />
-          <nav className="mono hidden items-center gap-1 text-[11px] tracking-[0.18em] uppercase md:flex">
-            <Link to="/dashboard" className="rounded-[2px] px-2.5 py-1.5 text-[color:var(--color-ink-2)] hover:bg-[color:var(--color-paper-3)]">
-              Overview
-            </Link>
-            <Link to="/employees" className="rounded-[2px] px-2.5 py-1.5 text-[color:var(--color-ink-2)] hover:bg-[color:var(--color-paper-3)]">
-              Employees
-            </Link>
-            <span className="rounded-[2px] bg-[color:var(--color-ink)] px-2.5 py-1.5 text-[color:var(--color-paper)]">
-              Training
-            </span>
-            <span className="rounded-[2px] px-2.5 py-1.5 text-[color:var(--color-ink-2)]">Alerts</span>
-          </nav>
-
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={toggleTheme}
-              aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="grid h-8 w-8 place-items-center rounded-full border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)] transition-colors hover:border-[color:var(--color-ink)]"
-            >
-              {dark ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-                </svg>
-              ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
-                </svg>
-              )}
-            </button>
-            <div className="grid h-8 w-8 place-items-center rounded-full bg-[color:var(--color-ink)] text-[11px] font-semibold text-[color:var(--color-paper)]">
-              NA
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* ── the nav dock ── */}
+      <NavDock active="Training" dark={dark} onToggleTheme={toggleTheme} />
 
       <div className="flex">
         {/* ── left rail ── */}
-        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-14 shrink-0 flex-col items-center gap-1 border-r border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] py-3 md:flex">
+        <aside className="sticky top-[76px] hidden h-[calc(100vh-76px)] w-14 shrink-0 flex-col items-center gap-1 border-r border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] py-3 md:flex">
           {RAIL_ITEMS.map((it) => {
             const cls = `grid h-9 w-9 place-items-center rounded-[3px] transition-colors ${
               it.active
@@ -303,7 +245,7 @@ export default function Competency() {
               </h1>
               <p className="mt-1.5 max-w-[620px] text-[13.5px] leading-relaxed text-[color:var(--color-ink-2)]">
                 Add the employee once — the C · B · A grade resolves itself from live certificates and time in
-                position. Only the certificates required for the role appear.
+                position. The seven mandatory safety certificates apply to every position.
               </p>
             </div>
 
@@ -386,9 +328,10 @@ export default function Competency() {
             <header className="mb-7 flex items-start justify-between gap-3 border-b border-[color:var(--color-rule-soft)] pb-5">
               <div>
                 <div className="eyebrow">Grade Engine</div>
-                <h2 className="display mt-2 text-[22px] text-[color:var(--color-ink)]">Live grade — two axes, one rule</h2>
+                <h2 className="display mt-2 text-[22px] text-[color:var(--color-ink)]">Live grade — certificates decide it</h2>
                 <p className="mt-1.5 text-[13px] text-[color:var(--color-ink-3)]">
-                  Grade = the lower of Training and Experience, floored at the role's entry grade.
+                  Grade = the training tiers held in date, floored at the role's entry grade. Time in position is
+                  shown for context but no longer caps the grade.
                 </p>
               </div>
               <span className="mono text-[11px] tracking-[0.18em] text-[color:var(--color-ink-4)]">01</span>
@@ -398,8 +341,8 @@ export default function Competency() {
               {/* identity */}
               <div>
                 <div className="flex items-center gap-4">
-                  <div className="emp-avatar grid h-16 w-16 place-items-center rounded-full">
-                    <span className="serif text-[21px] leading-none">{initialsOf(emp.name)}</span>
+                  <div className="emp-avatar grid h-16 w-16 place-items-center overflow-hidden rounded-full">
+                    <img src={photoOf(emp.name)} alt="" loading="lazy" className="h-full w-full object-cover" />
                   </div>
                   <div className="min-w-0">
                     <h3 className="display truncate text-[19px] text-[color:var(--color-ink)]">{emp.name}</h3>
@@ -447,19 +390,11 @@ export default function Competency() {
                     </>
                   ) : grade === null ? (
                     <>Grade still forming — complete the basic tier to enter at {startGrade}.</>
-                  ) : limiting === 'training' ? (
-                    <>
-                      Held at <b>{grade}</b> by the <b>training</b> axis — certificates decide the next move.
-                    </>
-                  ) : limiting === 'experience' ? (
-                    <>
-                      Held at <b>{grade}</b> by <b>time in position</b> — the certificates are already ahead.
-                    </>
                   ) : gi(grade) === 2 ? (
                     <>Peak grade. Keep certificates in date to hold it.</>
                   ) : (
                     <>
-                      Both axes agree on <b>{grade}</b> — advance either one to move up.
+                      Held at <b>{grade}</b> by the certificates in date — clearing the next tier moves it up.
                     </>
                   )}
                 </p>
@@ -468,7 +403,7 @@ export default function Competency() {
               {/* the two axes */}
               <div className="space-y-5">
                 <AxisMeter
-                  label="① Training"
+                  label="Training — sets the grade"
                   value={trainingLv}
                   detail={
                     trainingLv === null
@@ -479,11 +414,11 @@ export default function Competency() {
                   sub={`${heldCount}/${required.length} required certificates in date · ${Math.round((heldCount / Math.max(1, required.length)) * 100)}% complete`}
                 />
                 <AxisMeter
-                  label="② Experience"
+                  label="Experience — context only"
                   value={expLv}
                   detail={`${years.toFixed(1)} yrs in position`}
                   pct={Math.min(100, (years / 3) * 100)}
-                  sub="Bands — C: under 1 yr · B: 1–3 yrs · A: over 3 yrs"
+                  sub="Tracked for reference — no longer affects the grade"
                   markers
                 />
               </div>
@@ -603,7 +538,7 @@ export default function Competency() {
           </motion.section>
           )}
 
-          {/* ══ ② CERTIFICATE WALLET ══ */}
+          {/* ══ ② CERTIFICATE WALLET — filed into status folders ══ */}
           {step === 2 && (
           <motion.section
             initial={{ opacity: 0, y: 14 }}
@@ -611,52 +546,91 @@ export default function Competency() {
             transition={{ duration: 0.55, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
             className="surface mt-7 rounded-[3px] p-7 lg:p-9"
           >
-            <header className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-[color:var(--color-rule-soft)] pb-5">
+            <header className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-[color:var(--color-rule-soft)] pb-5">
               <div>
                 <div className="eyebrow">Certificate Wallet</div>
                 <h2 className="display mt-2 text-[22px] text-[color:var(--color-ink)]">
                   {emp.position} — {required.length} required
                 </h2>
                 <p className="mt-1.5 text-[13px] text-[color:var(--color-ink-3)]">
-                  Filtered by the Mandatory Training Matrix — {hiddenCount} course{hiddenCount === 1 ? '' : 's'} not
-                  required for this role {hiddenCount === 1 ? 'is' : 'are'} hidden. Each ring shows the share of a
-                  certificate's validity still remaining before expiry.
+                  Every certificate is filed by live status — open a folder to pull its cards. All {required.length}{' '}
+                  mandatory safety certificates apply to every role, so each employee carries the same block.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {(['all', 'valid', 'expiring', 'expired', 'missing'] as const).map((f) => {
-                  const on = filter === f;
-                  const n = f === 'all' ? views.length : counts[f];
-                  return (
-                    <button
-                      key={f}
-                      type="button"
-                      onClick={() => setFilter(f)}
-                      className={`mono rounded-full border px-3 py-1.5 text-[10px] tracking-[0.14em] uppercase transition-colors ${
-                        on
-                          ? 'border-[color:var(--color-ink)] bg-[color:var(--color-ink)] text-[color:var(--color-paper)]'
-                          : 'border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] text-[color:var(--color-ink-3)] hover:border-[color:var(--color-rule)]'
-                      }`}
-                    >
-                      {f} <span className="tabular">{n}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              <span className="mono text-[11px] tracking-[0.18em] text-[color:var(--color-ink-4)]">02</span>
             </header>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              <AnimatePresence mode="popLayout">
-                {shown.map((v) => (
-                  <CertCard key={v.code} view={v} now={now} interactive={simActive} onToggle={() => toggleCert(v.code)} />
-                ))}
-              </AnimatePresence>
-              {shown.length === 0 && (
-                <p className="col-span-full rounded-[1rem] border border-dashed border-[color:var(--color-rule)] px-5 py-8 text-center text-[13px] text-[color:var(--color-ink-3)]">
-                  No certificates in this state — a clean bill.
-                </p>
-              )}
+            {/* the four folders */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+              {(['valid', 'expiring', 'expired', 'missing'] as const).map((s) => (
+                <CertFolder
+                  key={s}
+                  status={s}
+                  certs={views.filter((v) => v.status === s)}
+                  open={filter === s}
+                  onToggle={() => setFilter(filter === s ? 'all' : s)}
+                />
+              ))}
             </div>
+
+            {/* the opened folder's shelf */}
+            <AnimatePresence initial={false}>
+              {filter !== 'all' && (
+                <motion.div
+                  key="wallet-shelf"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  className="overflow-hidden"
+                >
+                  <div
+                    id="wallet-shelf"
+                    className="wallet-shelf mt-7 rounded-[1.2rem] p-5"
+                    style={{ ['--cf-shelf' as string]: FOLDER_META[filter].hue }}
+                  >
+                    <div className="mb-4 flex flex-wrap items-center gap-2.5">
+                      <span className="h-2 w-2 rounded-full" style={{ background: FOLDER_META[filter].hue }} />
+                      <span className="mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-2)] uppercase">
+                        {STATUS_META[filter].label} — {shown.length} certificate{shown.length === 1 ? '' : 's'}
+                      </span>
+                      {simActive && (
+                        <span className="mono rounded-full bg-[color:var(--color-sgs)]/12 px-2.5 py-1 text-[9px] tracking-[0.14em] text-[color:var(--color-sgs-ink)] uppercase">
+                          Click a card to simulate
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setFilter('all')}
+                        aria-label="Close folder"
+                        className="ml-auto grid h-7 w-7 place-items-center rounded-full text-[color:var(--color-ink-3)] transition-colors hover:bg-[color:var(--color-paper-3)] hover:text-[color:var(--color-ink)]"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      <AnimatePresence mode="popLayout">
+                        {shown.map((v, i) => (
+                          <CertCard
+                            key={v.code}
+                            view={v}
+                            now={now}
+                            interactive={simActive}
+                            onToggle={() => toggleCert(v.code)}
+                            {...(i < 3 ? { flightId: `fly-${v.code}` } : { dealIndex: i - 3 })}
+                          />
+                        ))}
+                      </AnimatePresence>
+                      {shown.length === 0 && (
+                        <p className="col-span-full rounded-[1rem] border border-dashed border-[color:var(--color-rule)] px-5 py-8 text-center text-[13px] text-[color:var(--color-ink-3)]">
+                          This folder is empty — a clean bill.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.section>
           )}
 
@@ -739,7 +713,7 @@ export default function Competency() {
                         Eligible for promotion to {next}
                       </div>
                       <p className="text-[12px] text-[color:var(--color-ink-3)]">
-                        Both axes are met — ready for supervisor sign-off.
+                        Certificates complete — ready for supervisor sign-off.
                       </p>
                     </div>
                   </motion.div>
@@ -756,8 +730,7 @@ export default function Competency() {
                 ) : (
                   <>
                     <div className="mono mb-3 text-[10px] tracking-[0.18em] text-[color:var(--color-ink-3)] uppercase">
-                      To reach {next} — {gapCerts.length + (monthsRemaining > 0 ? 1 : 0)} item
-                      {gapCerts.length + (monthsRemaining > 0 ? 1 : 0) === 1 ? '' : 's'}
+                      To reach {next} — {gapCerts.length} item{gapCerts.length === 1 ? '' : 's'}
                     </div>
                     <ul className="space-y-2.5">
                       {gapCerts.map((v) => (
@@ -790,27 +763,7 @@ export default function Competency() {
                           </Link>
                         </li>
                       ))}
-                      {monthsRemaining > 0 && (
-                        <li className="flex items-center gap-3 rounded-[0.9rem] border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] px-4 py-3">
-                          <span className="grid h-8 w-11 shrink-0 place-items-center rounded-[0.5rem] bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-2)]">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="12" cy="12" r="9" />
-                              <path d="M12 7v5l3 3" />
-                            </svg>
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-[12.5px] font-medium text-[color:var(--color-ink)]">
-                              {monthsRemaining} more month{monthsRemaining === 1 ? '' : 's'} in position
-                            </span>
-                            <span className="text-[11px] text-[color:var(--color-ink-3)]">
-                              {simActive
-                                ? 'Projection paused inside the simulator'
-                                : `${EXP_YEARS_FOR[next]} yr band reached ${projected.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}`}
-                            </span>
-                          </span>
-                        </li>
-                      )}
-                      {gapCerts.length === 0 && monthsRemaining === 0 && (
+                      {gapCerts.length === 0 && (
                         <li className="rounded-[0.9rem] border border-dashed border-[color:var(--color-rule)] px-4 py-4 text-[12.5px] text-[color:var(--color-ink-3)]">
                           Nothing outstanding.
                         </li>
@@ -873,6 +826,38 @@ export default function Competency() {
 const CTL =
   'w-full appearance-none rounded-[0.7rem] border px-3.5 py-2.5 text-[13.5px] text-[color:var(--color-ink)] transition-colors focus:outline-none';
 
+/** Small muted glyph that leads a field label in the Record Certificate form,
+ *  so each input reads at a glance (who · role · course · dates · file). */
+function FieldIcon({ id }: { id: string }) {
+  const p = {
+    width: 14,
+    height: 14,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.7,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    className: 'shrink-0 text-[color:var(--color-ink-3)]',
+  };
+  switch (id) {
+    case 'user':
+      return (<svg {...p}><circle cx="12" cy="8" r="3.5" /><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" /></svg>);
+    case 'tag':
+      return (<svg {...p}><path d="M3 12l8.5-8.5H20V12l-8.5 8.5z" /><circle cx="15.5" cy="8.5" r="1.3" /></svg>);
+    case 'book':
+      return (<svg {...p}><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z" /><path d="M5 4v13" /></svg>);
+    case 'calendar':
+      return (<svg {...p}><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 9h18M8 3v4M16 3v4" /></svg>);
+    case 'clock':
+      return (<svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>);
+    case 'file':
+      return (<svg {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>);
+    default:
+      return null;
+  }
+}
+
 /** Record a course result and issue its certificate — the wireframe's primary
  *  Training action, wired live. A Pass writes the certificate into the record
  *  and the engine below recomputes instantly; a Fail is logged with no
@@ -897,7 +882,7 @@ function RecordCertificate({
   const [code, setCode] = useState<TrainingCode | ''>('');
   const [issued, setIssued] = useState<string>(todayISO(now));
   const [fileName, setFileName] = useState<string>('');
-  const [done, setDone] = useState<{ code: TrainingCode; grade: Grade | null; passed: boolean } | null>(null);
+  const [done, setDone] = useState<{ code: TrainingCode; grade: Grade | null; passed: boolean; renewed: boolean } | null>(null);
   const result = 'pass' as const;
 
   const emp = roster.find((e) => e.id === empId) ?? roster.find((e) => e.id === currentEmpId) ?? roster[0];
@@ -907,13 +892,17 @@ function RecordCertificate({
   const required = ROLE_MATRIX[emp.position];
   const course = code ? trainingOf(code) : null;
   const expiry = course && issued ? addYearsISO(issued, course.validityYears) : '';
-  const years = yearsSince(emp.hired, now);
   const alreadyOnFile = code ? certs[code] : undefined;
+  // Status of the certificate already on file (if any), so a renewal of an
+  // expired/expiring certificate is recognised and framed as an update rather
+  // than a plain "replace".
+  const alreadyStatus = alreadyOnFile ? statusOf(alreadyOnFile, now) : undefined;
+  const isRenewal = alreadyStatus === 'expired' || alreadyStatus === 'expiring';
 
-  const before = gradeFromCerts(emp, certs, years, now);
+  const before = gradeFromCerts(emp, certs, now);
   const projected =
     code && expiry
-      ? gradeFromCerts(emp, { ...certs, [code]: { issued, expiry } }, years, now)
+      ? gradeFromCerts(emp, { ...certs, [code]: { issued, expiry } }, now)
       : before;
   const promotes = before !== projected;
 
@@ -930,9 +919,9 @@ function RecordCertificate({
     if (expiry !== '') {
       onRegister(emp.id, code, issued, expiry);
       onFocusEmployee(emp.id);
-      setDone({ code, grade: projected, passed: true });
+      setDone({ code, grade: projected, passed: true, renewed: isRenewal });
     } else {
-      setDone({ code, grade: before, passed: false });
+      setDone({ code, grade: before, passed: false, renewed: false });
     }
     resetFields();
   };
@@ -956,7 +945,8 @@ function RecordCertificate({
           <div className="eyebrow">Record Certificate</div>
           <h2 className="display mt-2 text-[22px] text-[color:var(--color-ink)]">Log a result — issue the certificate</h2>
           <p className="mt-1.5 text-[13px] text-[color:var(--color-ink-3)]">
-            A pass writes the certificate into the record and the grade below recomputes at once.
+            A pass writes the certificate into the record — an expired one is renewed in place — and the grade below
+            recomputes at once.
           </p>
         </div>
         <span className="mono text-[11px] tracking-[0.18em] text-[color:var(--color-ink-4)]">00</span>
@@ -965,7 +955,8 @@ function RecordCertificate({
       <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
         {/* employee */}
         <label className="block">
-          <span className="mb-2 block text-[12.5px] font-medium text-[color:var(--color-ink)]">
+          <span className="mb-2 flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--color-ink)]">
+            <FieldIcon id="user" />
             Employee <span className="text-[color:var(--color-sgs)]">*</span>
           </span>
           <div className="relative">
@@ -982,7 +973,10 @@ function RecordCertificate({
 
         {/* position (derived) */}
         <div className="block">
-          <span className="mb-2 block text-[12.5px] font-medium text-[color:var(--color-ink)]">Position</span>
+          <span className="mb-2 flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--color-ink)]">
+            <FieldIcon id="tag" />
+            Position
+          </span>
           <div className="flex items-center justify-between rounded-[0.7rem] border border-dashed border-[color:var(--color-rule)] px-3.5 py-2.5">
             <span className="text-[13.5px] text-[color:var(--color-ink)]">{emp.position}</span>
             <span className="mono text-[9px] tracking-[0.16em] text-[color:var(--color-ink-4)] uppercase">from record</span>
@@ -991,7 +985,8 @@ function RecordCertificate({
 
         {/* course */}
         <label className="block">
-          <span className="mb-2 block text-[12.5px] font-medium text-[color:var(--color-ink)]">
+          <span className="mb-2 flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--color-ink)]">
+            <FieldIcon id="book" />
             Training / Course <span className="text-[color:var(--color-sgs)]">*</span>
           </span>
           <div className="relative">
@@ -1018,7 +1013,10 @@ function RecordCertificate({
 
         {/* issue date */}
         <label className="block">
-          <span className="mb-2 block text-[12.5px] font-medium text-[color:var(--color-ink)]">Issue date</span>
+          <span className="mb-2 flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--color-ink)]">
+            <FieldIcon id="calendar" />
+            Issue date
+          </span>
           <input
             type="date"
             value={issued}
@@ -1030,7 +1028,10 @@ function RecordCertificate({
         {/* expiry (auto) */}
         <div className="block">
           <span className="mb-2 flex items-center justify-between text-[12.5px] font-medium text-[color:var(--color-ink)]">
-            Expiry date
+            <span className="flex items-center gap-1.5">
+              <FieldIcon id="clock" />
+              Expiry date
+            </span>
             <span className="mono text-[9px] tracking-[0.16em] text-[color:var(--color-ink-4)] uppercase">auto</span>
           </span>
           <div className="flex items-center justify-between rounded-[0.7rem] border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper-2)]/50 px-3.5 py-2.5">
@@ -1044,15 +1045,30 @@ function RecordCertificate({
 
       {/* file drop */}
       <div className="mt-5">
-        <span className="mb-2 flex items-center text-[12.5px] font-medium text-[color:var(--color-ink)]">
+        <span className="mb-2 flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--color-ink)]">
+          <FieldIcon id="file" />
           Certificate file <span className="ml-0.5 text-[color:var(--color-sgs)]">*</span>
         </span>
         <MiniDrop fileName={fileName} onPick={setFileName} onClear={() => setFileName('')} />
       </div>
 
       {alreadyOnFile && code !== '' && (
-        <p className="mt-3 text-[11.5px] text-[color:var(--color-ink-3)]">
-          {emp.name} already holds {code} (expires {fmtDate(alreadyOnFile.expiry)}) — registering replaces it.
+        <p className={`mt-3 text-[11.5px] ${isRenewal ? 'font-medium text-[oklch(0.55_0.17_28)]' : 'text-[color:var(--color-ink-3)]'}`}>
+          {alreadyStatus === 'expired' ? (
+            <>
+              {emp.name}’s {code} expired on {fmtDate(alreadyOnFile.expiry)} — recording the new pass renews it and
+              updates the record.
+            </>
+          ) : alreadyStatus === 'expiring' ? (
+            <>
+              {emp.name}’s {code} expires {fmtDate(alreadyOnFile.expiry)} — recording a fresh pass renews it and
+              updates the record.
+            </>
+          ) : (
+            <>
+              {emp.name} already holds {code} (expires {fmtDate(alreadyOnFile.expiry)}) — registering updates it.
+            </>
+          )}
         </p>
       )}
 
@@ -1090,7 +1106,11 @@ function RecordCertificate({
             disabled={!canSubmit}
             className="emp-btn-primary inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-[13px] font-semibold text-white disabled:pointer-events-none disabled:opacity-40"
           >
-            {result === 'pass' ? 'Register & issue' : 'Log result'}
+            <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 8v8M8 12h8" />
+            </svg>
+            {result === 'pass' ? (isRenewal ? 'Renew & update' : alreadyOnFile ? 'Update certificate' : 'Register & issue') : 'Log result'}
           </button>
         </div>
       </div>
@@ -1130,8 +1150,9 @@ function RecordCertificate({
               <p className="text-[12.5px] text-[color:var(--color-ink)]">
                 {done.passed ? (
                   <>
-                    Certificate <b>{done.code}</b> issued to <b>{emp.name}</b> — computed grade is now{' '}
-                    <b>{done.grade ?? '—'}</b>. It flows into the wallet and the Alerts page automatically.
+                    Certificate <b>{done.code}</b> {done.renewed ? 'renewed for' : 'issued to'} <b>{emp.name}</b> —
+                    computed grade is now <b>{done.grade ?? '—'}</b>. It flows into the wallet and the Alerts page
+                    automatically.
                   </>
                 ) : (
                   <>
@@ -1347,8 +1368,8 @@ function EmployeePicker({
         aria-expanded={open}
         className="flex w-[248px] items-center gap-2.5 rounded-full border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] py-1.5 pl-1.5 pr-3 text-left shadow-[var(--shadow-1)] transition-colors hover:border-[color:var(--color-rule)]"
       >
-        <span className="emp-avatar grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-semibold">
-          {initialsOf(current.name)}
+        <span className="emp-avatar grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full text-[11px] font-semibold">
+          <img src={photoOf(current.name)} alt="" loading="lazy" className="h-full w-full object-cover" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[12px] font-semibold leading-tight text-[color:var(--color-ink)]">{current.name}</span>
@@ -1400,8 +1421,8 @@ function EmployeePicker({
                       onClick={() => choose(e.id)}
                       className={`flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors ${act ? 'bg-[color:var(--color-paper-3)]' : ''}`}
                     >
-                      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-[11px] font-semibold ${on ? 'emp-avatar' : 'bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-2)]'}`}>
-                        {initialsOf(e.name)}
+                      <span className={`grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full text-[11px] font-semibold ${on ? 'emp-avatar' : 'bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-2)]'}`}>
+                        <img src={photoOf(e.name)} alt="" loading="lazy" className="h-full w-full object-cover" />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[12.5px] text-[color:var(--color-ink)]">{highlight(e.name, q)}</span>
@@ -1616,24 +1637,176 @@ const STATUS_META: Record<CertStatus, { label: string; cls: string; dot: string 
   },
 };
 
-/** A wallet pass for one required training. Clickable inside the simulator. */
+/** Folder hue + front-pocket caption per status. The hue feeds the `--cf`
+ *  custom property that tints the folder back, fan, disc and opened shelf.
+ *  Traffic-light vocabulary: palm green (DESIGN.md's certified/active color)
+ *  for valid, amber for expiring, red for expired, warm grey for missing. */
+const FOLDER_META: Record<CertStatus, { hue: string; caption: string }> = {
+  valid: { hue: 'oklch(0.53 0.08 160)', caption: 'In date' },
+  expiring: { hue: 'oklch(0.68 0.13 70)', caption: 'Renew soon' },
+  expired: { hue: 'oklch(0.55 0.17 28)', caption: 'Lapsed' },
+  missing: { hue: 'var(--color-ink-4)', caption: 'Not on file' },
+};
+
+/** Spring shared by every certificate "flight" — the shared-element journey a
+ *  card makes between its folder's fan and its full card on the shelf. */
+const FLIGHT = { type: 'spring', stiffness: 290, damping: 28 } as const;
+
+/** Fan poses for 1–3 peeking cards — offsets are % of the card's own size,
+ *  tilt in degrees. Hover/open modify these via --lift / --spread only. */
+const FAN_POSES: ReadonlyArray<ReadonlyArray<{ tx: number; ty: number; r: number; z: number }>> = [
+  [{ tx: -50, ty: -18, r: 2, z: 2 }],
+  [
+    { tx: -72, ty: -14, r: -9, z: 1 },
+    { tx: -30, ty: -21, r: 8, z: 2 },
+  ],
+  [
+    { tx: -86, ty: -11, r: -12, z: 1 },
+    { tx: -50, ty: -24, r: 1, z: 2 },
+    { tx: -14, ty: -10, r: 11, z: 1 },
+  ],
+];
+
+/** Status glyph inside the folder's disc (check / clock / bang / plus). */
+function FolderGlyph({ status }: { status: CertStatus }) {
+  const p = {
+    width: 15,
+    height: 15,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2.2,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  };
+  switch (status) {
+    case 'valid':
+      return (<svg {...p}><path d="M4 12l5 5L20 7" /></svg>);
+    case 'expiring':
+      return (<svg {...p}><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5v5l3 2" /></svg>);
+    case 'expired':
+      return (<svg {...p}><path d="M12 5v9" /><circle cx="12" cy="18" r="0.4" fill="currentColor" /></svg>);
+    case 'missing':
+      return (<svg {...p}><path d="M12 6v12M6 12h12" /></svg>);
+  }
+}
+
+/** One wallet category as a folder: up to three of its certificates fan out
+ *  behind a frosted front pocket previewing the top courses. Clicking files
+ *  it open — the front tips forward, the fanned cards leave the folder and
+ *  fly into their real cards on the shelf (shared layoutId), and fly back in
+ *  when it closes. Poses are pure CSS transforms; see competency.css. */
+function CertFolder({
+  status,
+  certs,
+  open,
+  onToggle,
+}: {
+  status: CertStatus;
+  certs: ReadonlyArray<CertView>;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const meta = STATUS_META[status];
+  const folder = FOLDER_META[status];
+  const top = certs.slice(0, 3);
+  const poses = FAN_POSES[top.length - 1] ?? [];
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      aria-controls="wallet-shelf"
+      style={{ ['--cf' as string]: folder.hue }}
+      className={`cert-folder mx-auto w-full max-w-[320px] sm:max-w-none ${open ? 'is-open' : ''} ${
+        status === 'missing' ? 'is-missing' : ''
+      } ${certs.length === 0 ? 'is-empty' : ''}`}
+    >
+      <span className="cf-stage">
+        <span aria-hidden className="cf-back" />
+        <span aria-hidden className="cf-fan">
+          {!open &&
+            top.map((v, i) => {
+              const pose = poses[i];
+              if (!pose) return null;
+              return (
+                <span
+                  key={v.code}
+                  className="cf-mini"
+                  style={{
+                    ['--tx' as string]: `${pose.tx}`,
+                    ['--ty' as string]: `${pose.ty}`,
+                    ['--r' as string]: `${pose.r}`,
+                    ['--z' as string]: `${pose.z}`,
+                  }}
+                >
+                  <motion.span layoutId={`fly-${v.code}`} transition={FLIGHT} className="cf-mini-card">
+                    <span className="cf-mini-code">{v.code}</span>
+                    <span className="cf-mini-line" />
+                    <span className="cf-mini-line cf-mini-line--short" />
+                    <span className="cf-mini-seal" />
+                  </motion.span>
+                </span>
+              );
+            })}
+        </span>
+        <span className="cf-front">
+          <span className="cf-rows">
+            {top.length === 0 ? (
+              <span className="cf-row">
+                <span>Empty — nothing filed</span>
+              </span>
+            ) : (
+              top.map((v) => (
+                <span key={v.code} className="cf-row">
+                  <b>{v.code}</b>
+                  <span>{v.training.name}</span>
+                </span>
+              ))
+            )}
+            {certs.length > 3 && <span className="cf-row-more">+{certs.length - 3} more</span>}
+          </span>
+          <span className="cf-foot">
+            <span className="cf-hint">{folder.caption} · {open ? 'Close' : 'Open'}</span>
+            <span className="cf-disc">
+              <FolderGlyph status={status} />
+            </span>
+          </span>
+        </span>
+      </span>
+      <span className="cf-label">
+        <span className="cf-title">{meta.label}</span>
+        <span className="cf-count">{certs.length}</span>
+      </span>
+    </button>
+  );
+}
+
+/** A wallet pass for one required training. Clickable inside the simulator.
+ *  With `flightId` the card is the landing half of a folder flight: it shares
+ *  a layoutId with a fanned mini in the folder, so Motion flies it out of the
+ *  folder on open and back in on close. Cards without a flight are "dealt"
+ *  onto the shelf from above, staggered by `dealIndex`. */
 function CertCard({
   view,
   now,
   interactive,
   onToggle,
+  flightId,
+  dealIndex = 0,
 }: {
   view: CertView;
   now: Date;
   interactive: boolean;
   onToggle: () => void;
+  flightId?: string;
+  dealIndex?: number;
 }) {
   const { training, status, rec } = view;
   const meta = STATUS_META[status];
   const missing = status === 'missing';
   const daysLeft = rec ? daysUntil(rec.expiry, now) : 0;
-  const validityDays = training.validityYears * 365.25;
-  const lifePct = rec ? Math.max(0, Math.min(1, daysLeft / validityDays)) : 0;
 
   const body = (
     <>
@@ -1682,7 +1855,23 @@ function CertCard({
             {interactive ? ' — click to simulate a pass' : ' — awaiting certificate'}
           </div>
         )}
-        {rec && status !== 'expired' && <LifeRing pct={lifePct} warn={status === 'expiring'} />}
+        {rec && (
+          <span
+            className={`grid h-9 w-9 shrink-0 place-items-center rounded-[0.6rem] ${
+              status === 'expired'
+                ? 'bg-[oklch(0.55_0.17_28)]/12 text-[oklch(0.55_0.17_28)]'
+                : status === 'expiring'
+                  ? 'bg-[oklch(0.68_0.13_70)]/16 text-[oklch(0.5_0.12_70)]'
+                  : 'bg-[color:var(--color-sgs)]/12 text-[color:var(--color-sgs-ink)]'
+            }`}
+            title="Certificate on file"
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="9" r="6" />
+              <path d="M9 13.4L7.4 22l4.6-2.7 4.6 2.7L15 13.4" />
+            </svg>
+          </span>
+        )}
       </div>
 
       {view.simulated && (
@@ -1701,58 +1890,32 @@ function CertCard({
         : 'border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)]'
   } ${view.simulated ? 'comp-simmed' : ''}`;
 
+  // Flight cards enter via the shared-element journey (no exit — the folder's
+  // remounting mini takes the snapshot over); dealt cards drop in from the
+  // folder row above, one after another, and lift back out on close.
+  const motionProps = flightId
+    ? ({ layout: true, layoutId: flightId, initial: false, transition: FLIGHT } as const)
+    : ({
+        layout: true,
+        initial: { opacity: 0, y: -30, scale: 0.9, rotate: dealIndex % 2 === 0 ? -2.5 : 2.5 },
+        animate: { opacity: 1, y: 0, scale: 1, rotate: 0 },
+        exit: { opacity: 0, y: -22, scale: 0.9 },
+        transition: { type: 'spring', stiffness: 380, damping: 30, delay: 0.06 + dealIndex * 0.045 },
+      } as const);
+
   return interactive ? (
     <motion.button
-      layout
+      {...motionProps}
       type="button"
       onClick={onToggle}
-      initial={{ opacity: 0, scale: 0.94 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.94 }}
-      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
       className={`${cls} cursor-pointer text-left hover:border-[color:var(--color-sgs)]/60`}
     >
       {body}
     </motion.button>
   ) : (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.94 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.94 }}
-      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      className={cls}
-    >
+    <motion.div {...motionProps} className={cls}>
       {body}
     </motion.div>
-  );
-}
-
-/** Tiny donut showing how much of the certificate's validity remains. */
-function LifeRing({ pct, warn }: { pct: number; warn: boolean }) {
-  const R = 13;
-  const C = 2 * Math.PI * R;
-  return (
-    <div className="relative grid h-9 w-9 shrink-0 place-items-center" title={`${Math.round(pct * 100)}% of validity left`}>
-      <svg width="36" height="36" viewBox="0 0 36 36" className="-rotate-90">
-        <circle cx="18" cy="18" r={R} fill="none" stroke="var(--color-paper-3)" strokeWidth="3.5" />
-        <motion.circle
-          cx="18"
-          cy="18"
-          r={R}
-          fill="none"
-          stroke={warn ? 'oklch(0.68 0.13 70)' : 'var(--color-sgs)'}
-          strokeWidth="3.5"
-          strokeLinecap="round"
-          strokeDasharray={C}
-          animate={{ strokeDashoffset: C * (1 - pct) }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        />
-      </svg>
-      <span className="tabular absolute text-[8px] font-semibold text-[color:var(--color-ink-2)]">
-        {Math.round(pct * 100)}%
-      </span>
-    </div>
   );
 }
 

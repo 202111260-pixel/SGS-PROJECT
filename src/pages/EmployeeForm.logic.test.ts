@@ -26,7 +26,8 @@ describe('certificate validity helpers', () => {
   it('reports remaining days or overdue status from the derived expiry', () => {
     const currentDate = new Date('2026-07-14T12:00:00');
 
-    expect(calculateCertificateRemainingDays('2024-07-14', currentDate)).toBe('0 days left');
+    expect(calculateCertificateRemainingDays('2024-07-14', currentDate)).toBe('Expires today');
+    expect(calculateCertificateRemainingDays('2024-07-15', currentDate)).toBe('1 day left');
     expect(calculateCertificateRemainingDays('2024-07-13', currentDate)).toBe('1 day overdue');
   });
 });

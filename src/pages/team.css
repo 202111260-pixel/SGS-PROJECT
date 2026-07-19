@@ -1,0 +1,708 @@
+/*
+  Team timesheet — scoped to `.dir-page .tm`. One place, Apple-generous
+  air: the team on the left (standing today, add/remove), the selected
+  member's month on the right (shift, hours, code tray, big calendar).
+  No cards, no rules — selection and grouping read through tint and
+  spacing only. Family hues shared with the duty roster.
+*/
+
+/* family hues (same values as roster.css — the pages must agree) */
+.dir-page .tm .is-duty      { --sf: oklch(0.53 0.1 162); }
+.dir-page .tm .is-rest      { --sf: oklch(0.55 0.02 70); }
+.dir-page .tm .is-planned   { --sf: oklch(0.72 0.12 82); }
+.dir-page .tm .is-unplanned { --sf: oklch(0.55 0.16 28); }
+.dir-page .tm .is-special   { --sf: oklch(0.46 0.055 45); }
+.dir-page .tm .is-extra     { --sf: oklch(0.31 0.03 55); }
+
+/* ── masthead controls ── */
+.dir-page .tm-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.dir-page .tm-month {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.dir-page .tm-step {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  color: var(--color-ink-3);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.dir-page .tm-step:hover {
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+}
+.dir-page .tm-month-label {
+  min-width: 128px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--color-ink);
+}
+.dir-page .tm-state {
+  min-width: 96px;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: oklch(0.53 0.09 160);
+}
+.dir-page .tm-state.is-dirty {
+  color: oklch(0.55 0.11 70);
+}
+.dir-page .tm-alert-word {
+  color: oklch(0.55 0.11 70);
+  font-weight: 700;
+}
+
+/* ── the split: team left · month right ── */
+.dir-page .tm-split {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 26px 56px;
+  margin-top: 26px;
+}
+
+/* ── the team side ── */
+.dir-page .tm-side-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.dir-page .tm-side-h {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .tm-side-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+.dir-page .tm-mini {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-rule-soft);
+  background: var(--color-paper);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.dir-page .tm-mini:hover {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+}
+.dir-page .tm-mini.is-on {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+}
+.dir-page .tm-mini--add {
+  flex-shrink: 0;
+}
+
+.dir-page .tm-addbox {
+  padding: 4px 0 14px;
+}
+.dir-page .tm-search {
+  width: 100%;
+  border: 1px solid var(--color-rule-soft);
+  border-radius: 999px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 12.5px;
+  padding: 9px 16px;
+  transition: border-color 0.2s ease;
+}
+.dir-page .tm-search::placeholder {
+  color: var(--color-ink-4);
+}
+.dir-page .tm-search:focus-visible {
+  outline: none;
+  border-color: var(--color-ink);
+}
+.dir-page .tm-addlist {
+  margin-top: 8px;
+}
+.dir-page .tm-addlist li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 2px;
+}
+.dir-page .tm-add-name {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dir-page .tm-add-none {
+  padding: 12px 2px;
+  font-size: 12.5px;
+  color: var(--color-ink-3);
+}
+
+.dir-page .tm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dir-page .tm-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.16s ease;
+}
+.dir-page .tm-person:hover {
+  background: color-mix(in oklab, var(--color-sgs) 5%, transparent);
+}
+.dir-page .tm-person.is-on {
+  background: color-mix(in oklab, var(--color-sgs) 10%, transparent);
+}
+.dir-page .tm-ava {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule-soft);
+  font-size: 13px;
+  color: var(--color-ink-2);
+}
+.dir-page .tm-ava img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dir-page .tm-ava--lg {
+  width: 54px;
+  height: 54px;
+  font-size: 17px;
+}
+.dir-page .tm-name {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dir-page .tm-sub {
+  display: block;
+  margin-top: 1px;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+.dir-page .tm-today {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: color-mix(in oklab, var(--sf) 58%, var(--color-ink));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dir-page .tm-today i {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--sf) 80%, var(--color-ink));
+}
+.dir-page .tm-chev {
+  flex-shrink: 0;
+  color: var(--color-ink-4);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.dir-page .tm-person:hover .tm-chev,
+.dir-page .tm-person.is-on .tm-chev {
+  opacity: 1;
+}
+.dir-page .tm-remove {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  color: var(--color-ink-4);
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+.dir-page .tm-remove:hover {
+  background: var(--color-paper-3);
+  color: oklch(0.5 0.16 28);
+}
+
+/* ── the member pane ── */
+.dir-page .tm-pane {
+  min-width: 0;
+}
+.dir-page .tm-pane-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 18px;
+}
+.dir-page .tm-pane-name {
+  font-size: 23px;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+.dir-page .tm-pane-sub {
+  margin-top: 5px;
+  font-size: 8.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .tm-docsline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 7px;
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .tm-docsline span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.dir-page .tm-docsline i {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--dc);
+}
+
+/* the shift: sun or moon, one tap */
+.dir-page .tm-shift {
+  display: inline-flex;
+}
+.dir-page .tm-shift button {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 16px;
+  border: 1px solid var(--color-rule-soft);
+  background: var(--color-paper);
+  color: var(--color-ink-3);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.dir-page .tm-shift button:first-child {
+  border-radius: 999px 0 0 999px;
+  border-right: 0;
+}
+.dir-page .tm-shift button:last-child {
+  border-radius: 0 999px 999px 0;
+}
+.dir-page .tm-shift button span {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.dir-page .tm-shift button small {
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: currentColor;
+  opacity: 0.75;
+}
+.dir-page .tm-shift button.is-on {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+}
+.dir-page .tm-shift button.is-readonly {
+  cursor: default;
+}
+
+/* the month in numbers — big, quiet, Apple air */
+.dir-page .tm-nums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 54px;
+  margin-top: 30px;
+}
+.dir-page .tm-nums > span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dir-page .tm-nums b {
+  font-size: 31px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--color-ink);
+}
+.dir-page .tm-nums .mono {
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+
+/* ── calendar + day inspector, side by side ── */
+.dir-page .tm-cal-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 26px 52px;
+  align-items: start;
+  margin-top: 30px;
+}
+
+/* the calendar — big tap targets, generous gaps, days you can read */
+.dir-page .tm-cal {
+  min-width: 0;
+}
+.dir-page .tm-cal-head,
+.dir-page .tm-cal-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 7px;
+}
+.dir-page .tm-cal-head {
+  margin-bottom: 7px;
+}
+.dir-page .tm-cal-head span {
+  text-align: center;
+  padding: 6px 0;
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--color-ink-3);
+}
+.dir-page .tm-cal-head span.is-we {
+  color: var(--color-ink-2);
+  background: var(--color-paper-3);
+  border-radius: 8px;
+}
+.dir-page .tm-cal-week {
+  margin-top: 7px;
+}
+.dir-page .tm-day {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 66px;
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--sf) 15%, var(--color-paper));
+  color: color-mix(in oklab, var(--sf) 58%, var(--color-ink));
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s var(--ease), box-shadow 0.15s ease;
+}
+.dir-page .tm-day:hover {
+  background: color-mix(in oklab, var(--sf) 30%, var(--color-paper));
+}
+.dir-page .tm-day:active {
+  transform: scale(0.95);
+}
+.dir-page .tm-day.is-sel {
+  box-shadow: inset 0 0 0 2px var(--color-ink);
+}
+.dir-page .tm-day:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 1px;
+}
+.dir-page .tm-day-no {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  display: grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: color-mix(in oklab, var(--sf) 45%, var(--color-ink-2));
+}
+.dir-page .tm-day.is-today .tm-day-no {
+  border-radius: 999px;
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+.dir-page .tm-day-code {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.dir-page .tm-day-hrs {
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 6.5px;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+}
+
+/* ── the day inspector: date · code · exact hours. Unwrapped. ── */
+.dir-page .tm-insp {
+  min-width: 0;
+}
+.dir-page .tm-insp-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dir-page .tm-insp-date {
+  min-width: 0;
+  text-align: center;
+}
+.dir-page .tm-insp-date b {
+  display: block;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+.dir-page .tm-insp-date .mono {
+  display: block;
+  margin-top: 3px;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .tm-insp-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 22px;
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .tm-insp-chips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 10px;
+}
+.dir-page .tm-insp-chips .rst-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 11px;
+}
+.dir-page .tm-insp-chips .rst-chip small {
+  font-family: var(--font-sans);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.dir-page .tm-insp-chips .rst-chip:disabled {
+  cursor: default;
+}
+.dir-page .tm-insp-reset {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-sgs-ink);
+  cursor: pointer;
+}
+.dir-page .tm-insp-reset:hover {
+  text-decoration: underline;
+}
+.dir-page .tm-times {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 14px;
+  margin-top: 12px;
+}
+.dir-page .tm-times label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.dir-page .tm-times label .mono {
+  font-size: 7.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+.dir-page .tm-time {
+  width: 104px;
+  height: 38px;
+  border-radius: 11px;
+  border: 1px solid var(--color-rule-soft);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  transition: border-color 0.18s ease;
+}
+.dir-page .tm-time:focus-visible {
+  outline: none;
+  border-color: var(--color-ink);
+}
+.dir-page .tm-time:disabled {
+  opacity: 0.5;
+}
+.dir-page .tm-time::-webkit-calendar-picker-indicator {
+  opacity: 0.4;
+}
+.dir-page .tm-dur {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-left: 4px;
+}
+.dir-page .tm-dur b {
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: var(--color-ink);
+}
+.dir-page .tm-dur .mono {
+  font-size: 7.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+.dir-page .tm-insp-off {
+  margin-top: 22px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+/* ── small screens: the team folds into an avatar strip on top ── */
+@media (max-width: 1000px) {
+  .dir-page .tm-split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .dir-page .tm-list {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 6px;
+    padding-bottom: 8px;
+  }
+  .dir-page .tm-person {
+    flex-direction: column;
+    gap: 6px;
+    width: 84px;
+    flex-shrink: 0;
+    padding: 10px 6px;
+    text-align: center;
+  }
+  .dir-page .tm-person .min-w-0 {
+    text-align: center;
+    width: 100%;
+  }
+  .dir-page .tm-name {
+    font-size: 10px;
+  }
+  .dir-page .tm-today {
+    justify-content: center;
+    font-size: 0; /* dot only on the strip */
+    gap: 0;
+    margin-top: 4px;
+  }
+  .dir-page .tm-chev {
+    display: none;
+  }
+  /* the shift toggle takes its own full line under the name */
+  .dir-page .tm-shift {
+    width: 100%;
+  }
+  .dir-page .tm-shift button {
+    flex: 1;
+    justify-content: center;
+  }
+  .dir-page .tm-nums {
+    gap: 14px 34px;
+  }
+  .dir-page .tm-nums b {
+    font-size: 25px;
+  }
+  /* inspector drops under the calendar, full width */
+  .dir-page .tm-cal-wrap {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+  }
+  .dir-page .tm-insp-chips {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .dir-page .tm-day {
+    min-height: 52px;
+    border-radius: 11px;
+  }
+  .dir-page .tm-day-hrs {
+    display: none;
+  }
+  .dir-page .tm-pane-head {
+    gap: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dir-page .tm-step,
+  .dir-page .tm-person,
+  .dir-page .tm-day,
+  .dir-page .tm-mini {
+    transition: none;
+  }
+}

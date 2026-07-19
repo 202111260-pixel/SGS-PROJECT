@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { EmployeeShell } from './EmployeeChrome';
 import { EMPLOYEES } from './Competency.data';
-import { initialsOf } from './Competency.logic';
+import { photoOf } from './avatar';
 import type { Employee, Grade } from './Competency.types';
 import { empNo, hrOf } from './EmployeeDirectory.data';
 import { complianceOf, DOC_STATUS_LABEL } from './EmployeeDirectory.logic';
@@ -41,6 +41,7 @@ export default function EmployeeDirectory() {
   const [project, setProject] = useState<string>('all');
   const [grade, setGrade] = useState<GradeFilter>('all');
   const [doc, setDoc] = useState<DocFilter>('all');
+  const [urgentOnly, setUrgentOnly] = useState(false);
 
   const rows = useMemo<Row[]>(
     () =>
@@ -61,6 +62,7 @@ export default function EmployeeDirectory() {
     if (project !== 'all' && r.emp.project !== project) return false;
     if (grade !== 'all' && r.c.grade !== grade) return false;
     if (doc !== 'all' && r.c.docStatus !== doc) return false;
+    if (urgentOnly && !r.c.urgent) return false;
     return true;
   });
 
@@ -68,14 +70,16 @@ export default function EmployeeDirectory() {
   const gradeCount = (g: Grade) => rows.filter((r) => r.c.grade === g).length;
   const inDate = rows.filter((r) => r.c.docStatus === 'complete').length;
   const attention = rows.filter((r) => r.c.docStatus === 'expired' || r.c.docStatus === 'incomplete').length;
+  const urgentCount = rows.filter((r) => r.c.urgent).length;
   const compliancePct = rows.length ? Math.round((inDate / rows.length) * 100) : 0;
 
-  const filtersActive = q !== '' || project !== 'all' || grade !== 'all' || doc !== 'all';
+  const filtersActive = q !== '' || project !== 'all' || grade !== 'all' || doc !== 'all' || urgentOnly;
   const clearFilters = () => {
     setQuery('');
     setProject('all');
     setGrade('all');
     setDoc('all');
+    setUrgentOnly(false);
   };
 
   return (
@@ -92,8 +96,8 @@ export default function EmployeeDirectory() {
             Employees
           </h1>
           <p className="mt-1.5 max-w-[560px] text-[13.5px] leading-relaxed text-[color:var(--color-ink-2)]">
-            The full field workforce, with each person's grade and document standing computed live from the
-            Competency engine. Open any row for the complete record.
+            The full Upstream field workforce, with each person's grade and document standing computed live from
+            the Competency engine. Open any row for the complete record.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -110,7 +114,7 @@ export default function EmployeeDirectory() {
       </div>
 
       {/* ── summary strip ── */}
-      <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <SummaryCard label="Total employees" value={String(rows.length)} sub={`${projects.length} projects`} idx={0} />
         <SummaryCard
           label="Grade distribution"
@@ -120,6 +124,15 @@ export default function EmployeeDirectory() {
         />
         <SummaryCard label="Documents in date" value={`${compliancePct}%`} sub={`${inDate} of ${rows.length} clear`} idx={2} accent />
         <SummaryCard label="Need attention" value={String(attention)} sub="expired or incomplete" idx={3} warn={attention > 0} />
+        <SummaryCard
+          label="Expiring ≤ 2 weeks"
+          value={String(urgentCount)}
+          sub={urgentOnly ? 'filtering · click to clear' : 'within 14 days · click to filter'}
+          idx={4}
+          warn={urgentCount > 0}
+          active={urgentOnly}
+          onClick={urgentCount > 0 || urgentOnly ? () => setUrgentOnly((v) => !v) : undefined}
+        />
       </div>
 
       {/* ── toolbar ── */}
@@ -191,8 +204,8 @@ export default function EmployeeDirectory() {
                   >
                     <td className="px-4 py-3">
                       <Link to={`/employees/${r.emp.id}`} className="flex items-center gap-3 group">
-                        <span className="emp-avatar grid h-9 w-9 shrink-0 place-items-center rounded-full text-[12px] font-semibold">
-                          {initialsOf(r.emp.name)}
+                        <span className="emp-avatar grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full text-[12px] font-semibold">
+                          <img src={photoOf(r.emp.name)} alt="" loading="lazy" className="h-full w-full object-cover" />
                         </span>
                         <span className="min-w-0">
                           <span className="block truncate text-[13.5px] font-medium text-[color:var(--color-ink)] group-hover:text-[color:var(--color-sgs-ink)]">
@@ -344,6 +357,8 @@ function SummaryCard({
   idx,
   accent = false,
   warn = false,
+  active = false,
+  onClick,
 }: {
   label: string;
   value: string;
@@ -351,14 +366,16 @@ function SummaryCard({
   idx: number;
   accent?: boolean;
   warn?: boolean;
+  active?: boolean;
+  onClick?: (() => void) | undefined;
 }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] }}
-      className="surface rounded-[1.1rem] px-4 py-3.5"
-    >
+  const anim = {
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.45, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] },
+  } as const;
+  const body = (
+    <>
       <p className="mono text-[9.5px] tracking-[0.18em] text-[color:var(--color-ink-3)] uppercase">{label}</p>
       <p
         className={`display mt-1.5 text-[clamp(1.4rem,2vw,1.9rem)] leading-none ${
@@ -368,6 +385,28 @@ function SummaryCard({
         {value}
       </p>
       <p className="mt-1.5 text-[11px] text-[color:var(--color-ink-3)]">{sub}</p>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <motion.button
+        type="button"
+        onClick={onClick}
+        aria-pressed={active}
+        {...anim}
+        className={`surface block w-full rounded-[1.1rem] px-4 py-3.5 text-left transition-shadow hover:shadow-[var(--shadow-1)] ${
+          active ? 'ring-2 ring-[color:var(--color-sgs)]' : ''
+        }`}
+      >
+        {body}
+      </motion.button>
+    );
+  }
+
+  return (
+    <motion.div {...anim} className="surface rounded-[1.1rem] px-4 py-3.5">
+      {body}
     </motion.div>
   );
 }

@@ -13,6 +13,8 @@ const EmployeeForm = lazy(() => import('./pages/EmployeeForm'))
 const EmployeeDirectory = lazy(() => import('./pages/EmployeeDirectory'))
 const EmployeeProfile = lazy(() => import('./pages/EmployeeProfile'))
 const Competency = lazy(() => import('./pages/Competency'))
+const Roster = lazy(() => import('./pages/Roster'))
+const Team = lazy(() => import('./pages/Team'))
 
 // Warm paper hold while a route chunk streams in — no white flash, no spinner.
 function RouteFallback() {
@@ -75,6 +77,9 @@ export default function App() {
         <Route path="/employees/:id/edit" element={<EmployeeForm mode="edit" />} />
         <Route path="/employees/:id" element={<EmployeeProfile />} />
         <Route path="/training" element={<Competency />} />
+        <Route path="/roster" element={<Roster />} />
+        <Route path="/team" element={<Team />} />
+        <Route path="/team/:id" element={<Team />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

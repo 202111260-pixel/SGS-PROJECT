@@ -60,3 +60,296 @@
 @media (prefers-reduced-motion: reduce) {
   .comp-page .comp-next-pulse { animation: none; }
 }
+
+/* ══ Certificate folders ═══════════════════════════════════════════════
+   The wallet filed as four tactile folders — one per live status. Up to
+   three of the category's certificates fan out behind a frosted front
+   pocket (the same glass material as the wizard's .emp-glassbar, so the
+   translucency is on-vocabulary, not decoration). Clicking a folder tips
+   its front open and the real cards spill into the shelf below.
+
+   Geometry is driven by custom properties so hover/open states only touch
+   `transform` (compositor-friendly, never layout):
+     --cf              status hue (set inline per folder)
+     --tx / --ty / --r base pose of one fanned card (% of own size / deg)
+     --lift / --spread stage-level modifiers raised on hover and open      */
+
+.comp-page .cert-folder {
+  position: relative;
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.comp-page .cert-folder.is-empty .cf-stage { opacity: 0.82; }
+
+/* stage — the box the folder lives in; perspective for the opening flap */
+.comp-page .cf-stage {
+  position: relative;
+  display: block;
+  aspect-ratio: 6 / 5;
+  perspective: 900px;
+  transition: opacity 0.3s ease;
+}
+
+/* back plate + its trapezoid tab — committed to the status color */
+.comp-page .cf-back {
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  bottom: 2.5%;
+  height: 60%;
+  border-radius: 0.9rem;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--cf) 58%, var(--color-paper-2)),
+    color-mix(in oklab, var(--cf) 42%, var(--color-paper-2))
+  );
+  border: 1px solid color-mix(in oklab, var(--cf) 62%, var(--color-rule-soft));
+  box-shadow: var(--shadow-1);
+}
+.comp-page .cf-back::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 7%;
+  width: 30%;
+  height: 13px;
+  background: color-mix(in oklab, var(--cf) 58%, var(--color-paper-2));
+  clip-path: polygon(0 100%, 9% 0, 88% 0, 100% 100%);
+}
+
+/* fanned mini-certificates peeking out of the folder. The outer .cf-mini is
+   a pure pose wrapper (CSS transform, hover lift); the inner .cf-mini-card is
+   the visible certificate and carries the Motion layoutId, so on open it
+   flies out of the folder into its real card on the shelf. */
+.comp-page .cf-fan { position: absolute; inset: 0; display: block; }
+.comp-page .cf-mini {
+  position: absolute;
+  bottom: 21%;
+  left: 50%;
+  width: 41%;
+  aspect-ratio: 3 / 4;
+  transform:
+    translate(calc(var(--tx) * 1%), calc((var(--ty) - var(--lift, 0)) * 1%))
+    rotate(calc(var(--r) * var(--spread, 1) * 1deg));
+  transition: transform 0.55s var(--ease);
+  z-index: var(--z, 1);
+}
+.comp-page .cf-mini-card {
+  position: absolute;
+  inset: 0;
+  border-radius: 0.65rem;
+  background: linear-gradient(180deg, var(--color-paper), color-mix(in oklab, var(--cf) 5%, var(--color-paper)));
+  border: 1px solid var(--color-rule-soft);
+  box-shadow: 0 12px 26px -14px oklch(0.24 0.02 55 / 0.55), var(--ring-top);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 11% 9%;
+  overflow: hidden;
+}
+.comp-page .cf-mini-code {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  color: color-mix(in oklab, var(--cf) 55%, var(--color-ink-2));
+}
+.comp-page .cf-mini-line {
+  display: block;
+  width: 78%;
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-ink) 10%, transparent);
+}
+.comp-page .cf-mini-line--short { width: 52%; }
+.comp-page .cf-mini-seal {
+  margin-top: auto;
+  width: 24%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  border: 2px solid color-mix(in oklab, var(--cf) 55%, transparent);
+  display: grid;
+  place-items: center;
+}
+.comp-page .cf-mini-seal::after {
+  content: "";
+  width: 38%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--cf) 70%, transparent);
+}
+/* frosted front pocket — carries the top-course preview and the status disc */
+.comp-page .cf-front {
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  bottom: 0;
+  height: 62%;
+  z-index: 3;
+  border-radius: 1.05rem;
+  background: color-mix(in oklab, color-mix(in oklab, var(--cf) 28%, var(--color-paper)) 70%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.45);
+  backdrop-filter: blur(16px) saturate(1.45);
+  border: 1px solid color-mix(in oklab, var(--cf) 30%, var(--color-paper));
+  box-shadow: 0 10px 26px -14px oklch(0.24 0.02 55 / 0.4), inset 0 1px 0 oklch(1 0 0 / 0.55);
+  transform-origin: 50% 100%;
+  transition: transform 0.55s var(--ease), border-color 0.3s ease, box-shadow 0.55s var(--ease);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 5px;
+  padding: clamp(10px, 6%, 15px) clamp(11px, 7%, 17px);
+  text-align: left;
+}
+.comp-page .cf-front::before {
+  content: "";
+  position: absolute;
+  top: -11px;
+  left: 6%;
+  width: 26%;
+  height: 12px;
+  background: color-mix(in oklab, color-mix(in oklab, var(--cf) 28%, var(--color-paper)) 70%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.45);
+  backdrop-filter: blur(16px) saturate(1.45);
+  clip-path: polygon(0 100%, 11% 0, 87% 0, 100% 100%);
+}
+.comp-page[data-theme="dark"] .cf-front {
+  box-shadow: 0 10px 26px -12px oklch(0 0 0 / 0.5), inset 0 1px 0 oklch(1 0 0 / 0.07);
+}
+
+/* pose modifiers — the fan rises on hover, spreads wide when filed open */
+.comp-page .cert-folder:hover .cf-stage,
+.comp-page .cert-folder:focus-visible .cf-stage { --lift: 8; --spread: 1.22; }
+.comp-page .cert-folder.is-open .cf-stage { --lift: 15; --spread: 1.38; }
+.comp-page .cert-folder.is-open .cf-front {
+  transform: rotateX(10deg);
+  border-color: color-mix(in oklab, var(--cf) 58%, var(--color-rule-soft));
+}
+
+/* front pocket contents */
+.comp-page .cf-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  overflow: hidden;
+}
+.comp-page .cf-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+.comp-page .cf-row b {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--color-ink);
+  flex-shrink: 0;
+}
+.comp-page .cf-row span {
+  color: var(--color-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.comp-page .cf-row-more {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.comp-page .cf-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+.comp-page .cf-hint {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.comp-page .cf-disc {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--cf) 86%, white), var(--cf));
+  box-shadow:
+    0 6px 14px -6px color-mix(in oklab, var(--cf) 70%, transparent),
+    inset 0 1px 0 oklch(1 0 0 / 0.35);
+  transition: transform 0.4s var(--ease);
+}
+.comp-page .cert-folder:hover .cf-disc { transform: scale(1.07); }
+.comp-page .cert-folder.is-missing .cf-disc {
+  background: transparent;
+  color: var(--color-ink-3);
+  border: 1.5px dashed var(--color-rule);
+  box-shadow: none;
+}
+
+/* label row under the folder */
+.comp-page .cf-label {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.comp-page .cf-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-size: 15.5px;
+  color: var(--color-ink-2);
+  transition: color 0.3s ease;
+}
+.comp-page .cert-folder:hover .cf-title,
+.comp-page .cert-folder.is-open .cf-title { color: var(--color-ink); }
+.comp-page .cf-count {
+  min-width: 22px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: var(--color-paper-3);
+  color: var(--color-ink-2);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.comp-page .cert-folder.is-open .cf-count { background: var(--cf); color: white; }
+
+/* the opened shelf — washed with the open folder's hue */
+.comp-page .wallet-shelf {
+  border: 1px solid color-mix(in oklab, var(--cf-shelf, var(--color-sgs)) 32%, var(--color-rule-soft));
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--cf-shelf, var(--color-sgs)) 10%, var(--color-paper-2)),
+    var(--color-paper-2)
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comp-page .cf-mini,
+  .comp-page .cf-front,
+  .comp-page .cf-disc { transition: none; }
+}

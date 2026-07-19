@@ -1,8 +1,15 @@
 /*
   Employees directory + profile extras — scoped to `.dir-page`, layered on the
-  registry tokens (dashboard.css) and the premium form skin (employee-form.css,
-  which supplies the ambient copper washes, field wells, avatar, glass bar and
-  gradient buttons). Nothing here leaks outside `.dir-page`.
+  registry tokens (dashboard.css) and the premium form skin (employee-form.css).
+  Nothing here leaks outside `.dir-page`.
+
+  The profile is a personnel dossier: every section unwrapped straight on the
+  page ground (main + mono sub headings, clean spaced rows — no white cards,
+  no separator rules). The four status folders rest directly on the page in
+  the Competency page's traffic-light hues (set per folder through
+  --pf-bright / --pf-deep / --pf-text); company property is a small
+  disclosure inside the identity sheet. Copper strictly for the brand
+  (coin, chips, renewal). Solid colors only.
 */
 
 /* ── Directory table: quiet zebra-free rows that warm on hover ── */
@@ -22,14 +29,10 @@
   backdrop-filter: blur(6px);
 }
 
-/* ── Grade emblem: a copper coin the profile hero is built around ── */
+/* ── Grade emblem: the solid copper coin shared by roster and profile ── */
 .dir-page .grade-coin {
-  background:
-    radial-gradient(120% 120% at 30% 20%, color-mix(in oklab, var(--color-sgs-bright) 90%, white), var(--color-sgs)),
-    var(--color-sgs);
-  box-shadow:
-    0 1px 0 oklch(1 0 0 / 0.35) inset,
-    0 10px 30px -8px color-mix(in oklab, var(--color-sgs) 60%, transparent);
+  background: var(--color-sgs);
+  box-shadow: 0 8px 22px -10px color-mix(in oklab, var(--color-sgs) 60%, transparent);
   color: white;
 }
 .dir-page .grade-coin.is-forming {
@@ -38,48 +41,951 @@
   box-shadow: none;
 }
 
-/* ── Profile hero band: the copper mesh the identity sits on ── */
-.dir-page .profile-hero {
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(130% 200% at 88% -40%, color-mix(in oklab, var(--color-sgs) 30%, transparent), transparent 55%),
-    radial-gradient(90% 170% at 4% 130%, color-mix(in oklab, var(--color-sgs-deep) 26%, transparent), transparent 58%),
-    linear-gradient(135deg, color-mix(in oklab, var(--color-sgs) 13%, var(--color-paper)), var(--color-paper));
+/* ── Shared type + row pieces ── */
+.dir-page .pf-note-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  line-height: 1.08;
+  font-size: 23px;
+  color: var(--color-ink);
+}
+.dir-page .pf-kv {
+  font-size: 13px;
+  color: var(--color-ink-2);
+  overflow-wrap: anywhere;
+}
+.dir-page .pf-kv-label,
+.dir-page .pf-kv > span {
+  color: var(--color-ink-3);
+}
+.dir-page .pf-dots {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  color: var(--color-ink-3);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.dir-page .pf-dots:hover {
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+}
+
+/* ── Identity: no card — the record sits straight on the page ground,
+      paper-clipped photo on the left, SGS mark on the right. ── */
+.dir-page .pf-hero-name {
+  font-size: clamp(26px, 3vw, 32px);
+}
+.dir-page .pf-hero-foot {
+  margin-top: 1.4rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--color-rule-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+/* Identity facts as icon rows. */
+.dir-page .pf-kv--icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.4;
+}
+.dir-page .pf-kv-ic {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--color-paper);
   border: 1px solid var(--color-rule-soft);
-  box-shadow: var(--shadow-2), var(--ring-top);
+  color: var(--color-ink-2);
 }
-/* A faint engraved grid, like a field survey sheet, behind the hero. */
-.dir-page .profile-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(color-mix(in oklab, var(--color-ink) 4%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in oklab, var(--color-ink) 4%, transparent) 1px, transparent 1px);
-  background-size: 30px 30px;
-  mask-image: radial-gradient(120% 100% at 100% 0%, black, transparent 70%);
-  -webkit-mask-image: radial-gradient(120% 100% at 100% 0%, black, transparent 70%);
+.dir-page .pf-kv-ic svg {
+  width: 14px;
+  height: 14px;
 }
-
-/* Big profile avatar — same copper alloy as the form avatar, scaled up. */
-.dir-page .profile-avatar {
-  background: linear-gradient(150deg, var(--color-sgs-bright), var(--color-sgs-deep));
+.dir-page .pf-photo {
+  position: relative;
+  flex-shrink: 0;
+  rotate: -2.5deg;
+  margin-top: 6px;
+}
+.dir-page .pf-photo-img {
+  display: grid;
+  place-items: center;
+  width: 108px;
+  aspect-ratio: 4 / 5;
+  border-radius: 14px;
+  object-fit: cover;
+  background: var(--color-sgs);
   color: white;
-  box-shadow:
-    0 0 0 5px var(--color-paper),
-    0 18px 40px -12px color-mix(in oklab, var(--color-sgs) 55%, transparent);
+  font-size: 36px;
+  border: 3px solid var(--color-paper);
+  outline: 1px solid var(--color-rule-soft);
+  box-shadow: 0 14px 30px -14px oklch(0.24 0.02 55 / 0.4);
 }
-
-/* ── Certificate timeline spine ── */
-.dir-page .tl-spine {
-  background: linear-gradient(
-    to bottom,
-    var(--color-rule-soft),
-    color-mix(in oklab, var(--color-sgs) 40%, var(--color-rule-soft)),
-    var(--color-rule-soft)
+.dir-page .pf-photo-clip {
+  position: absolute;
+  top: -15px;
+  left: 12px;
+  rotate: 40deg;
+  color: var(--color-ink-3);
+  filter: drop-shadow(0 1px 1px oklch(0 0 0 / 0.25));
+}
+.dir-page .pf-hero-logo {
+  height: 44px;
+  width: auto;
+  color: var(--color-ink);
+}
+/* Footer barcode + employee no — the ID card's tail, on the sheet itself. */
+.dir-page .pf-barcode {
+  display: block;
+  width: 112px;
+  height: 20px;
+  color: var(--color-ink);
+  background: repeating-linear-gradient(
+    90deg,
+    currentColor 0 2px,
+    transparent 2px 4px,
+    currentColor 4px 5px,
+    transparent 5px 9px,
+    currentColor 9px 12px,
+    transparent 12px 13px,
+    currentColor 13px 14px,
+    transparent 14px 18px
   );
 }
+.dir-page .pf-hero-foot b {
+  font-weight: 600;
+  color: var(--color-ink);
+}
 
-/* Life ring / meter stroke helpers reuse the copper accent set in dashboard.css. */
+/* ── Company property: a small disclosure inside the identity sheet —
+      an icon row you click, the issued items pop out as paper chips. ── */
+.dir-page .pf-prop-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin-top: 12px;
+  font: inherit;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-ink-2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.dir-page .pf-prop-btn b {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.dir-page .pf-prop-btn .pf-kv-ic {
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.dir-page .pf-prop-btn:hover .pf-kv-ic,
+.dir-page .pf-prop-btn:focus-visible .pf-kv-ic {
+  border-color: var(--color-ink-3);
+  color: var(--color-ink);
+}
+.dir-page .pf-prop-caret {
+  color: var(--color-ink-3);
+  transition: rotate 0.35s var(--ease);
+}
+.dir-page .pf-prop-btn[aria-expanded="true"] .pf-prop-caret {
+  rotate: 180deg;
+}
+.dir-page ul.pf-prop-pop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 0 2px 40px;
+}
+.dir-page .pf-prop-chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule-soft);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+.dir-page .pf-prop-none {
+  padding: 10px 0 0 40px;
+  font-size: 12.5px;
+  color: var(--color-ink-3);
+}
+
+/* ── Certificates: the four status folders resting straight on the page
+      ground — no cabinet, no box. The selected one pulls up — transform
+      only, never layout. ── */
+.dir-page .pf-dossier {
+  position: relative;
+  margin-top: 2rem;
+}
+.dir-page .pf-sub {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  background: transparent;
+  font: inherit;
+  position: relative;
+  display: block;
+  padding: 42px 0 0;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transform: translateY(0);
+  transition: transform 0.45s var(--ease), opacity 0.35s ease;
+}
+.dir-page .pf-sub:hover,
+.dir-page .pf-sub:focus-visible {
+  transform: translateY(-5px);
+}
+.dir-page .pf-sub.is-sel {
+  transform: translateY(-9px);
+}
+.dir-page .pf-sub.is-zero {
+  opacity: 0.6;
+}
+/* While one folder is pulled out, the others recede so the selection reads. */
+.dir-page .pf-dossier.has-sel .pf-sub:not(.is-sel) {
+  opacity: 0.55;
+}
+.dir-page .pf-sub-sheet {
+  position: absolute;
+  top: 12px;
+  left: 38%;
+  width: 46%;
+  border-radius: 8px 8px 0 0;
+  background: oklch(0.985 0.006 85);
+  border: 1px solid oklch(0.88 0.01 78);
+  border-bottom: 0;
+  box-shadow: 0 -6px 18px -8px oklch(0 0 0 / 0.35);
+  padding: 7px 9px 26px;
+  rotate: 1.5deg;
+  transition: translate 0.45s var(--ease);
+}
+.dir-page .pf-sub.is-sel .pf-sub-sheet,
+.dir-page .pf-sub:hover .pf-sub-sheet {
+  translate: 0 -5px;
+}
+.dir-page .pf-sub-sheet > span {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: oklch(0.52 0.015 58);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dir-page .pf-sub-sheet i {
+  display: block;
+  height: 3px;
+  width: 74%;
+  border-radius: 999px;
+  background: oklch(0.87 0.01 78);
+  margin-top: 6px;
+}
+/* The folder itself: bright tab over a deep body in the status hue. */
+.dir-page .pf-sub-tab {
+  position: absolute;
+  top: 27px;
+  left: 10px;
+  width: 30%;
+  height: 24px;
+  border-radius: 9px 9px 0 0;
+  background: var(--pf-bright);
+}
+.dir-page .pf-sub-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 88px;
+  border-radius: 13px;
+  padding: 12px 14px;
+  background: var(--pf-deep);
+  color: var(--pf-text);
+  box-shadow: 0 12px 26px -18px oklch(0.18 0.03 55 / 0.55);
+}
+.dir-page .pf-sub.is-sel .pf-sub-body {
+  box-shadow: 0 16px 30px -14px oklch(0.18 0.03 55 / 0.45);
+}
+.dir-page .pf-sub-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-size: 16.5px;
+  line-height: 1.15;
+}
+.dir-page .pf-sub-count {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+/* Nearest expiry, visible without opening the folder. */
+.dir-page .pf-sub-date {
+  margin-top: 4px;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.92;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Next renewal beside the Certificates header: the one place the date
+   lives — quiet mono text, no chip. */
+.dir-page .pf-renew {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+  white-space: nowrap;
+}
+
+/* The drawer that unfolds when a status folder opens — straight on the
+   page ground, ink on paper. */
+.dir-page .pf-drawer {
+  overflow: hidden;
+  background: transparent;
+}
+.dir-page .pf-drawer-list {
+  padding: 8px;
+}
+.dir-page .pf-dossier .pf-drawer-list {
+  padding: 10px 0 0;
+}
+.dir-page .pf-dossier .pf-row:hover {
+  background: color-mix(in oklab, var(--color-sgs) 6%, transparent);
+}
+.dir-page .pf-dossier .pf-drawer-empty {
+  padding: 14px 2px 0;
+}
+.dir-page .pf-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 0.8rem;
+  transition: background-color 0.18s var(--ease);
+}
+.dir-page .pf-row-code {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  min-width: 48px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: color-mix(in oklab, var(--pf-chip, var(--color-ink-4)) 14%, var(--color-paper));
+  color: color-mix(in oklab, var(--pf-chip, var(--color-ink-4)) 72%, var(--color-ink));
+}
+.dir-page .pf-row-code--ghost {
+  background: transparent;
+  border: 1px dashed var(--color-rule);
+  color: var(--color-ink-4);
+}
+.dir-page .pf-row-main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.dir-page .pf-row-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dir-page .pf-row-sub {
+  margin-top: 1px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+.dir-page .pf-row-end {
+  flex-shrink: 0;
+  text-align: right;
+}
+.dir-page .pf-row-date {
+  display: block;
+  font-size: 11.5px;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.dir-page .pf-row-days {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+.dir-page .pf-drawer-empty {
+  padding: 16px 18px;
+  font-size: 12.5px;
+  color: var(--color-ink-3);
+}
+
+/* ── Unwrapped section headers: copper icon chip beside a main display
+      title over a mono sub-line — no box, no rule, the heading sits
+      straight on the page ground like the identity sheet. ── */
+.dir-page .pf-sec-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 14px;
+}
+/* Wide sections: title block left, meta (renewal · link) right. */
+.dir-page .pf-sec-head--split {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  row-gap: 8px;
+  margin-bottom: 18px;
+}
+.dir-page .pf-sec-lead {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.dir-page .pf-sec-title {
+  font-size: 19px;
+  line-height: 1.1;
+  color: var(--color-ink);
+}
+.dir-page .pf-sec-sub {
+  margin-top: 3px;
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+.dir-page .pf-sec-ic {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--color-sgs);
+  color: white;
+  box-shadow: 0 6px 16px -8px color-mix(in oklab, var(--color-sgs) 70%, transparent);
+}
+
+/* ── Metric rows: quiet icon chip · label · value. No pills, no rules —
+      rows sit straight on the ground spaced by air, chips cut like the
+      identity sheet's fact chips. ── */
+.dir-page .pf-stats {
+  display: flex;
+  flex-direction: column;
+}
+.dir-page .pf-stat {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 2px;
+}
+.dir-page .pf-stat-chip {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule-soft);
+  color: var(--color-ink-2);
+}
+.dir-page .pf-stat-chip svg {
+  width: 14px;
+  height: 14px;
+}
+.dir-page .pf-stat-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.dir-page .pf-stat-label {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-ink);
+}
+.dir-page .pf-stat-sub {
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+.dir-page .pf-stat-value {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+.dir-page .pf-stat-value small {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+/* The next-step seal: the traffic-light hue (--al) carried only by the
+   icon — the statement itself is bare ink on the ground. */
+.dir-page .pf-alert-ic {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--al);
+  color: white;
+}
+.dir-page .pf-alert-ic svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* The fit-to-work verdict: an official stamp pressed straight onto the
+   page in the status hue (--vd) — fit, or clearance required. Binary;
+   never a percentage. No card around it. */
+.dir-page .pf-verdict {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.dir-page .pf-verdict-seal {
+  position: relative;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  rotate: -4deg;
+  color: color-mix(in oklab, var(--vd) 85%, var(--color-ink));
+  border: 2px solid color-mix(in oklab, var(--vd) 76%, var(--color-paper));
+}
+.dir-page .pf-verdict-seal::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px dashed color-mix(in oklab, var(--vd) 60%, var(--color-paper));
+  border-radius: 999px;
+}
+.dir-page .pf-verdict-word {
+  font-size: 19px;
+  line-height: 1.15;
+  color: var(--color-ink);
+}
+.dir-page .pf-verdict-sub {
+  margin-top: 3px;
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Duty: this month's shift as one tinted tape — a chip per day in the
+      roster's family hues, today ringed, totals beneath. No box. ── */
+.dir-page .pf-duty .is-duty      { --sf: oklch(0.53 0.1 162); }
+.dir-page .pf-duty .is-rest      { --sf: oklch(0.55 0.02 70); }
+.dir-page .pf-duty .is-planned   { --sf: oklch(0.72 0.12 82); }
+.dir-page .pf-duty .is-unplanned { --sf: oklch(0.55 0.16 28); }
+.dir-page .pf-duty .is-special   { --sf: oklch(0.46 0.055 45); }
+.dir-page .pf-duty .is-extra     { --sf: oklch(0.31 0.03 55); }
+.dir-page .pf-duty-grid {
+  display: grid;
+  grid-template-columns: 272px minmax(0, 1fr);
+  gap: 22px 64px;
+  align-items: center;
+  margin-top: 4px;
+}
+/* the gauge — one arc segment per day, hours in the hub */
+.dir-page .pf-dial {
+  position: relative;
+  width: 272px;
+  max-width: 100%;
+}
+.dir-page .pf-dial svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.dir-page .pf-seg {
+  fill: color-mix(in oklab, var(--sf) 17%, var(--color-paper));
+  cursor: pointer;
+  transition: fill 0.15s ease;
+}
+.dir-page .pf-seg.is-active {
+  fill: color-mix(in oklab, var(--sf) 44%, var(--color-paper));
+  stroke: var(--color-ink);
+  stroke-width: 1.1;
+}
+.dir-page .pf-seg.is-today {
+  fill: color-mix(in oklab, var(--sf) 62%, var(--color-paper));
+  stroke: var(--color-ink);
+  stroke-width: 1.4;
+}
+.dir-page .pf-dial-tick {
+  font-size: 7px;
+  font-weight: 600;
+  fill: var(--color-ink-4);
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+.dir-page .pf-dial-pointer {
+  fill: var(--color-ink);
+}
+.dir-page .pf-dial-core {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  row-gap: 2px;
+  text-align: center;
+  pointer-events: none;
+}
+.dir-page .pf-dial-core b {
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--color-ink);
+}
+.dir-page .pf-dial-core .mono {
+  font-size: 7.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .pf-dial-core .pf-dial-core-code {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+/* the facts beside it */
+.dir-page .pf-duty-facts {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.dir-page .pf-duty-stand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: color-mix(in oklab, var(--sf) 58%, var(--color-ink));
+}
+.dir-page .pf-duty-stand i {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--sf) 80%, var(--color-ink));
+}
+.dir-page .pf-duty-stand small {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--color-ink-3);
+}
+.dir-page .pf-duty-line {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--color-ink-2);
+}
+.dir-page .pf-duty-line b {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.dir-page .pf-duty-sum {
+  margin-top: 6px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .pf-duty-sum b {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+.dir-page .pf-duty-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+.dir-page .pf-duty-keys span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.dir-page .pf-duty-keys i {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--sf) 70%, var(--color-ink));
+}
+/* the month, spelled out — every day in its span, no lines, air only */
+.dir-page .pf-duty-ledger {
+  margin-top: 30px;
+}
+.dir-page .pf-duty-ledger-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .pf-duty-ledger-h b {
+  font-size: 8.5px;
+  font-weight: 600;
+  color: var(--color-ink-4);
+}
+.dir-page .pf-duty-ledger ul {
+  margin-top: 10px;
+  column-gap: 60px;
+}
+@media (min-width: 900px) {
+  .dir-page .pf-duty-ledger ul {
+    columns: 2;
+  }
+}
+.dir-page .pf-duty-ledger li {
+  break-inside: avoid;
+  display: grid;
+  grid-template-columns: 56px 44px minmax(0, 1fr) 40px 72px;
+  gap: 12px;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 11px;
+  transition: background-color 0.15s ease;
+}
+.dir-page .pf-duty-ledger li.is-hot {
+  background: color-mix(in oklab, var(--sf) 14%, transparent);
+}
+.dir-page .pf-led-range {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+.dir-page .pf-led-code {
+  display: grid;
+  place-items: center;
+  height: 22px;
+  border-radius: 7px;
+  font-size: 9px;
+  font-weight: 700;
+  background: color-mix(in oklab, var(--sf) 15%, var(--color-paper));
+  color: color-mix(in oklab, var(--sf) 58%, var(--color-ink));
+}
+.dir-page .pf-led-name {
+  font-size: 13px;
+  color: var(--color-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dir-page .pf-led-days {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+.dir-page .pf-led-hrs {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-align: right;
+  color: var(--color-ink);
+}
+
+@media (max-width: 760px) {
+  .dir-page .pf-duty-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dir-page .pf-dial {
+    justify-self: center;
+  }
+}
+
+/* ── Remaining certificates: a mono sub-heading over clean spaced rows —
+      spelled out straight on the ground, no box, no rules. ── */
+.dir-page .pf-remain {
+  margin-top: 18px;
+  padding: 0 2px;
+}
+.dir-page .pf-remain-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .pf-remain-h b {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-sgs-ink);
+}
+.dir-page .pf-remain-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+}
+.dir-page .pf-remain-row:first-child {
+  margin-top: 6px;
+}
+.dir-page .pf-remain-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-ink);
+}
+.dir-page .pf-remain-tag {
+  flex-shrink: 0;
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .pf-remain-tag--due {
+  color: oklch(0.55 0.17 28);
+  font-weight: 600;
+}
+.dir-page .pf-remain-none {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--color-ink-2);
+}
+
+/* ── The certificates section's foot: the FTW verdict stamped on the
+      sheet with the document standings beside it. No box, no rules. ── */
+.dir-page .pf-cert-standing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 28px;
+  margin-top: 22px;
+}
+.dir-page .pf-docrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 28px;
+}
+.dir-page .pf-doc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-ink-2);
+}
+.dir-page .pf-doc b {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* ── Competency, full width: metrics · the next-step statement · what
+      remains. The statement is the section's centrepiece. ── */
+.dir-page .pf-next {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+.dir-page .pf-next .pf-alert-ic {
+  margin-top: 3px;
+  width: 30px;
+  height: 30px;
+}
+.dir-page .pf-next .pf-alert-ic svg {
+  width: 15px;
+  height: 15px;
+}
+.dir-page .pf-next-word {
+  font-size: 18px;
+  line-height: 1.45;
+  letter-spacing: -0.008em;
+  color: var(--color-ink);
+  max-width: 34rem;
+}
+.dir-page .pf-comp .pf-remain {
+  margin-top: 0;
+}
+
+/* Dark theme: deeper cast shadows so the sheets still read as paper. */
+.dir-page[data-theme="dark"] .pf-sub-sheet {
+  box-shadow: 0 12px 24px -10px oklch(0 0 0 / 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dir-page .pf-sub,
+  .dir-page .pf-sub-sheet,
+  .dir-page .pf-prop-caret {
+    transition: none;
+  }
+}

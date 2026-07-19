@@ -4,18 +4,9 @@ export type Grade = 'C' | 'B' | 'A';
 
 export type Tier = 'basic' | 'intermediate' | 'advanced';
 
-export type TrainingCode =
-  | 'HSEI'
-  | 'H2SI'
-  | 'AHA'
-  | 'FWI'
-  | 'PTWS'
-  | 'LV'
-  | 'HV'
-  | 'AGT'
-  | 'RNB'
-  | 'OPAL'
-  | 'IWCF';
+/** The official mandatory safety block, exactly as the Add Employee form
+ *  defines it (EmployeeForm.data → SAFETY_CERTS). No invented courses. */
+export type TrainingCode = 'FTW' | 'HSE' | 'H2S' | 'FA' | 'DDL' | 'IFR' | 'DDH';
 
 export type Training = {
   code: TrainingCode;

@@ -1,0 +1,149 @@
+/*
+  The nav dock — one floating ink pill, centred at the top of every
+  registry page. Solid colors only; the active link is the white pill.
+  Press anything and it grows a touch; scroll and the dock settles
+  smaller with a deeper shadow. Tokens flip it elegantly in dark mode.
+*/
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+.nav-dock-wrap {
+  position: sticky;
+  top: 12px;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+  pointer-events: none;
+  transition: transform 0.45s var(--ease), opacity 0.35s ease;
+}
+.nav-dock-wrap.is-hidden {
+  transform: translateY(-140%);
+  opacity: 0;
+}
+.nav-dock {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 7px;
+  border-radius: 999px;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  box-shadow: 0 20px 44px -20px oklch(0.15 0.02 55 / 0.55);
+  transition: transform 0.4s var(--ease), box-shadow 0.4s ease;
+}
+.nav-dock.is-scrolled {
+  transform: scale(0.955);
+  box-shadow: 0 12px 30px -12px oklch(0.15 0.02 55 / 0.6);
+}
+.nav-dock-logo {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  transition: transform 0.22s var(--ease);
+}
+.nav-dock-logo:hover {
+  transform: scale(1.07);
+}
+.nav-dock-logo:active {
+  transform: scale(1.14);
+}
+.nav-dock-mark {
+  height: 17px;
+  width: auto;
+}
+.nav-dock-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 6px;
+}
+.nav-dock-links a,
+.nav-dock-links span {
+  padding: 9px 15px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  color: color-mix(in oklab, var(--color-paper) 74%, var(--color-ink));
+  transition: transform 0.2s var(--ease), background-color 0.2s ease, color 0.2s ease;
+}
+.nav-dock-links a:hover {
+  color: var(--color-paper);
+  transform: scale(1.06);
+}
+.nav-dock-links a:active {
+  transform: scale(1.12);
+}
+.nav-dock-links .is-on {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+.nav-dock-links .is-on:hover {
+  color: var(--color-ink);
+}
+.nav-dock-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 3px;
+}
+.nav-dock-ic {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  color: color-mix(in oklab, var(--color-paper) 80%, var(--color-ink));
+  cursor: pointer;
+  transition: transform 0.2s var(--ease), background-color 0.2s ease, color 0.2s ease;
+}
+.nav-dock-ic:hover {
+  background: color-mix(in oklab, var(--color-paper) 15%, transparent);
+  color: var(--color-paper);
+  transform: scale(1.08);
+}
+.nav-dock-ic:active {
+  transform: scale(1.16);
+}
+.nav-dock-user {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: 11px;
+  font-weight: 700;
+  transition: transform 0.2s var(--ease);
+}
+.nav-dock-user:hover {
+  transform: scale(1.07);
+}
+
+@media (max-width: 860px) {
+  .nav-dock-links {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-dock-wrap,
+  .nav-dock,
+  .nav-dock-logo,
+  .nav-dock-links a,
+  .nav-dock-ic,
+  .nav-dock-user {
+    transition: none;
+  }
+}

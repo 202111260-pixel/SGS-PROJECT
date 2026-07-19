@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import Wordmark from '../components/Wordmark';
+import NavDock from '../components/NavDock';
 import './dashboard.css';
 import type { Event, Kpi } from './Dashboard.types';
-import { formatGST, gen, relTime, verbFor } from './Dashboard.utils';
+import { gen, relTime, verbFor } from './Dashboard.utils';
 import {
   activityRows,
   eventTemplates,
@@ -188,87 +188,7 @@ function TopBar({
   dark: boolean;
   onToggleTheme: () => void;
 }) {
-  const [time, setTime] = useState(formatGST(new Date()));
-  useVisibleInterval(() => setTime(formatGST(new Date())), 1000);
-
-  const nav: Array<{ label: string; to?: string }> = [
-    { label: 'Overview', to: '/dashboard' },
-    { label: 'Analytics', to: '/dashboard/analytics' },
-    { label: 'Employees', to: '/employees' },
-    { label: 'Training', to: '/training' },
-    { label: 'Trainees' },
-  ];
-
-  return (
-    <header className="sticky top-0 z-40 border-b border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)]/90 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-[1700px] items-center gap-6 px-5 lg:px-7">
-        <a href="/" aria-label="Back to site" className="flex items-center gap-2.5">
-          <Wordmark tone="light" />
-        </a>
-        <span className="hidden h-5 w-px bg-[color:var(--color-rule-soft)] md:block" />
-        <nav className="hidden items-center gap-1 md:flex">
-          {nav.map(({ label, to }) => {
-            const cls = `mono rounded-[2px] px-2.5 py-1.5 text-[11px] tracking-[0.18em] uppercase transition-colors ${
-              label === active
-                ? 'bg-[color:var(--color-ink)] text-[color:var(--color-paper)]'
-                : 'text-[color:var(--color-ink-2)] hover:bg-[color:var(--color-paper-3)]'
-            }`;
-            return to ? (
-              <Link key={label} to={to} className={cls}>{label}</Link>
-            ) : (
-              <a key={label} href="#" className={cls}>{label}</a>
-            );
-          })}
-        </nav>
-
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={onSearch}
-            className="hidden items-center gap-2 rounded-[2px] border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] px-2.5 py-1.5 lg:flex hover:border-[color:var(--color-ink)]"
-          >
-            <span aria-hidden className="mono text-[12px] text-[color:var(--color-ink-3)]">⌕</span>
-            <span className="w-[280px] text-left text-[12.5px] text-[color:var(--color-ink-3)]">
-              Search trainees, courses, operators…
-            </span>
-            <span className="mono rounded-[2px] border border-[color:var(--color-rule-soft)] px-1 text-[9.5px] tracking-[0.1em] text-[color:var(--color-ink-3)]">
-              ⌘K
-            </span>
-          </button>
-          <span className="mono hidden items-center gap-2 rounded-[2px] border border-[color:var(--color-rule-soft)] px-2.5 py-1.5 text-[10.5px] tracking-[0.18em] text-[color:var(--color-ink-2)] uppercase md:inline-flex">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[color:var(--color-sgs)]" />
-            Live · <span className="tabular text-[color:var(--color-ink)]">{time}</span> GST
-          </span>
-          <button
-            onClick={onToggleTheme}
-            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-            title={dark ? 'Light mode' : 'Dark mode'}
-            className="grid h-8 w-8 place-items-center rounded-full border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)] transition-colors hover:border-[color:var(--color-ink)]"
-          >
-            {dark ? (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="4" />
-                <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-              </svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
-              </svg>
-            )}
-          </button>
-          <button className="relative grid h-8 w-8 place-items-center rounded-full border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)]">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.7 21a2 2 0 0 1-3.4 0" />
-            </svg>
-            <span className="absolute -right-0.5 -top-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-[color:var(--color-sgs)] mono text-[8px] text-white">3</span>
-          </button>
-          <div className="grid h-8 w-8 place-items-center rounded-full bg-[color:var(--color-ink)] text-[11px] font-semibold text-[color:var(--color-paper)]">
-            NA
-          </div>
-        </div>
-      </div>
-    </header>
-  );
+  return <NavDock active={active} dark={dark} onToggleTheme={onToggleTheme} onSearch={onSearch} />;
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -286,7 +206,7 @@ function Rail() {
     { i: 'cog', label: 'Settings' },
   ];
   return (
-    <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-14 shrink-0 flex-col items-center gap-1 border-r border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] py-3 md:flex">
+    <aside className="sticky top-[76px] hidden h-[calc(100vh-76px)] w-14 shrink-0 flex-col items-center gap-1 border-r border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] py-3 md:flex">
       {items.map((it) => {
         const cls = `grid h-9 w-9 place-items-center rounded-[3px] transition-colors ${
           it.active
@@ -1685,7 +1605,7 @@ function VerticalBarChart() {
   const { ref, tip, move, leave } = useTip<{ m: string; v: number }>();
 
   return (
-    <Panel title="Monthly completions" subtitle="Last 12 months · vertical bars" idx="14"
+    <Panel title="Certifications issued · monthly" subtitle="Last 12 months · vertical bars" idx="14"
       action={<Chip label="Avg 419" muted />}>
      <div ref={ref} className="relative lg:h-full">
       <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" className="block w-full lg:h-full">
@@ -1771,7 +1691,7 @@ function MultiLineChart() {
   };
 
   return (
-    <Panel title="Sectors · 4-week trend" subtitle="Multi-series line chart" idx="15"
+    <Panel title="Sector activity · 4-week trend" subtitle="Multi-series line chart" idx="15"
       action={
         <div className="flex flex-wrap gap-1.5">
           {series.map((s) => <Chip key={s.name} label={s.name} dot={s.color} />)}
@@ -1951,7 +1871,7 @@ function ScatterChart() {
   const { ref, tip, move, leave } = useTip<typeof dots[number]>();
 
   return (
-    <Panel title="Hours vs. score" subtitle="Each dot = one cohort" idx="17">
+    <Panel title="Training hours vs. assessment score" subtitle="Each dot = one cohort" idx="17">
      <div ref={ref} className="relative lg:h-full">
       <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" className="block w-full lg:h-full">
         {[0, 1, 2, 3, 4].map((i) => {
@@ -2030,7 +1950,7 @@ function CandleRange() {
   const { ref, tip, move, leave } = useTip<{ i: number; lo: number; hi: number; open: number; close: number; up: boolean }>();
 
   return (
-    <Panel title="Pass-rate range · 18 cohorts" subtitle="High · low · open · close" idx="18">
+    <Panel title="Pass-rate spread · 18 cohorts" subtitle="High · low · open · close" idx="18">
      <div ref={ref} className="relative lg:h-full">
       <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" className="block w-full lg:h-full">
         {[0, 1, 2, 3, 4].map((i) => {
@@ -2093,7 +2013,7 @@ function GroupedBarChart() {
   const { ref, tip, move, leave } = useTip<{ name: string; v: number; group: string; color: string }>();
 
   return (
-    <Panel title="Quarter performance" subtitle="Plan · Actual · Forecast" idx="19"
+    <Panel title="Quarterly performance · plan vs actual" subtitle="Plan · Actual · Forecast" idx="19"
       action={<div className="flex gap-1.5">{series.map((s) => <Chip key={s.name} label={s.name} dot={s.color} />)}</div>}>
      <div ref={ref} className="relative lg:h-full">
       <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" className="block w-full lg:h-full">
@@ -2230,7 +2150,7 @@ function PolarBarChart() {
   };
 
   return (
-    <Panel title="Weekday utilisation" subtitle="Polar bar · % of capacity" idx="21">
+    <Panel title="Training-centre load · by weekday" subtitle="Polar bar · % of capacity" idx="21">
      <div ref={ref} className="relative lg:h-full">
       <svg viewBox="0 0 360 320" preserveAspectRatio="xMidYMid meet" className="block w-full lg:h-full">
         {[0.25, 0.5, 0.75, 1].map((s) => (

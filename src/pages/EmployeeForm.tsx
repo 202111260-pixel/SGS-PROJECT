@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
-import Wordmark from '../components/Wordmark';
+import NavDock from '../components/NavDock';
 import RotatingText from '../components/RotatingText';
 import './dashboard.css';
 import './employee-form.css';
@@ -210,53 +210,12 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
       data-theme={dark ? 'dark' : undefined}
       className="sgs-registry emp-form min-h-screen bg-[color:var(--color-paper-2)] text-[color:var(--color-ink)]"
     >
-      {/* ── top bar ── */}
-      <header className="sticky top-0 z-40 border-b border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)]/90 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-[1700px] items-center gap-5 px-5 lg:px-7">
-          <a href="/" aria-label="Back to site" className="flex items-center gap-2.5">
-            <Wordmark tone="light" />
-          </a>
-          <span className="hidden h-5 w-px bg-[color:var(--color-rule-soft)] md:block" />
-          <nav className="mono hidden items-center gap-1 text-[11px] tracking-[0.18em] uppercase md:flex">
-            <Link to="/dashboard" className="rounded-[2px] px-2.5 py-1.5 text-[color:var(--color-ink-2)] hover:bg-[color:var(--color-paper-3)]">
-              Overview
-            </Link>
-            <span className="rounded-[2px] bg-[color:var(--color-ink)] px-2.5 py-1.5 text-[color:var(--color-paper)]">
-              Employees
-            </span>
-            <Link to="/training" className="rounded-[2px] px-2.5 py-1.5 text-[color:var(--color-ink-2)] hover:bg-[color:var(--color-paper-3)]">
-              Training
-            </Link>
-            <span className="rounded-[2px] px-2.5 py-1.5 text-[color:var(--color-ink-2)]">Alerts</span>
-          </nav>
-
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={toggleTheme}
-              aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="grid h-8 w-8 place-items-center rounded-full border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)] transition-colors hover:border-[color:var(--color-ink)]"
-            >
-              {dark ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-                </svg>
-              ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
-                </svg>
-              )}
-            </button>
-            <div className="grid h-8 w-8 place-items-center rounded-full bg-[color:var(--color-ink)] text-[11px] font-semibold text-[color:var(--color-paper)]">
-              NA
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* ── the nav dock ── */}
+      <NavDock active="Employees" dark={dark} onToggleTheme={toggleTheme} />
 
       <div className="flex">
         {/* ── left rail ── */}
-        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-14 shrink-0 flex-col items-center gap-1 border-r border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] py-3 md:flex">
+        <aside className="sticky top-[76px] hidden h-[calc(100vh-76px)] w-14 shrink-0 flex-col items-center gap-1 border-r border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper)] py-3 md:flex">
           {RAIL_ITEMS.map((it) => {
             const cls = `grid h-9 w-9 place-items-center rounded-[3px] transition-colors ${
               it.active
@@ -406,7 +365,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                 transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 className="shrink-0 self-start px-1 pb-4 pt-1"
               >
-              <Section idx="01" eyebrow="Section A" title="Basic Information">
+              <Section idx="01" eyebrow="Section A" title="Basic Information" icon="user">
                 <div className="mb-7 flex items-center gap-5 border-b border-[color:var(--color-rule-soft)] pb-7">
                   <PhotoUpload
                     photo={form.photo}
@@ -423,7 +382,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                 </div>
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
-                  <Field label="Full Name" required error={errors.fullName} valid={form.fullName.trim() !== ''}>
+                  <Field label="Full Name" icon="user" required error={errors.fullName} valid={form.fullName.trim() !== ''}>
                     <input
                       value={form.fullName}
                       onChange={(e) => set('fullName', e.target.value)}
@@ -433,7 +392,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     />
                   </Field>
 
-                  <Field label="Employee Number" required error={errors.employeeNo} valid={form.employeeNo.trim() !== ''}>
+                  <Field label="Employee Number" icon="id" required error={errors.employeeNo} valid={form.employeeNo.trim() !== ''}>
                     <input
                       value={form.employeeNo}
                       onChange={(e) => set('employeeNo', e.target.value)}
@@ -444,7 +403,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     />
                   </Field>
 
-                  <Field label="Email" required error={errors.email} valid={EMAIL_RE.test(form.email.trim())}>
+                  <Field label="Email" icon="mail" required error={errors.email} valid={EMAIL_RE.test(form.email.trim())}>
                     <input
                       type="email"
                       value={form.email}
@@ -455,7 +414,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     />
                   </Field>
 
-                  <Field label="Mobile Number">
+                  <Field label="Mobile Number" icon="phone">
                     <div className={`emp-fieldgroup flex items-stretch overflow-hidden rounded-[0.7rem] border ${inputOk} focus-within:border-[color:var(--color-sgs)]`}>
                       <span className="mono grid place-items-center border-r border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper-3)] px-3 text-[12.5px] text-[color:var(--color-ink-2)]">
                         +968
@@ -470,7 +429,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     </div>
                   </Field>
 
-                  <Field label="Position" required error={errors.position} valid={form.position !== ''}>
+                  <Field label="Position" icon="tag" required error={errors.position} valid={form.position !== ''}>
                     <Select
                       value={form.position}
                       onChange={(v) => {
@@ -485,7 +444,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     />
                   </Field>
 
-                  <Field label="Project" required error={errors.project} valid={form.project !== ''}>
+                  <Field label="Project" icon="briefcase" required error={errors.project} valid={form.project !== ''}>
                     <Select
                       value={form.project}
                       onChange={(v) => set('project', v)}
@@ -496,7 +455,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                   </Field>
 
                   {hasGradeLadder(form.position) && (
-                    <Field label="Current Grade" valid={form.grade !== ''}>
+                    <Field label="Current Grade" icon="award" valid={form.grade !== ''}>
                       <div className="emp-fieldgroup flex rounded-[0.85rem] border p-1">
                         {GRADE_LADDER.map((g) => {
                           const on = form.grade === g;
@@ -600,7 +559,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     </div>
                   </div>
 
-                  <Field label="Join Date">
+                  <Field label="Join Date" icon="calendar">
                     <div>
                       <input
                         type="date"
@@ -616,7 +575,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     </div>
                   </Field>
 
-                  <Field label="CV (PDF)">
+                  <Field label="CV (PDF)" icon="file">
                     <FileButton
                       name={form.cv}
                       placeholder="Upload CV"
@@ -636,7 +595,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                 transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 className="shrink-0 self-start px-1 pb-4 pt-1"
               >
-              <Section idx="02" eyebrow="Section B" title="Official Documents" subtitle="A file and an expiry date for each.">
+              <Section idx="02" eyebrow="Section B" title="Official Documents" subtitle="A file and an expiry date for each." icon="doc">
                 {OFFICIAL_DOCS.map((d) => (
                   <DocRow
                     key={d.key}
@@ -659,7 +618,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                 transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 className="shrink-0 self-start px-1 pb-4 pt-1"
               >
-              <Section idx="03" eyebrow="Section B-2" title="Mandatory Safety Trainings" subtitle="Certificate file + expiry for each course.">
+              <Section idx="03" eyebrow="Section B-2" title="Mandatory Safety Trainings" subtitle="Certificate file + expiry for each course." icon="shield">
                 {SAFETY_CERTS.map((c) => (
                   <DocRow
                     key={c.key}
@@ -697,10 +656,15 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                 className="surface rounded-[3px] p-7 lg:p-9"
               >
                 <header className="mb-7 flex items-start justify-between gap-3 border-b border-[color:var(--color-rule-soft)] pb-5">
-                  <div>
-                    <div className="eyebrow">Review</div>
-                    <h2 className="display mt-2 text-[22px] text-[color:var(--color-ink)]">Review &amp; Save</h2>
-                    <p className="mt-1.5 text-[13px] text-[color:var(--color-ink-3)]">Confirm the details, then save the record.</p>
+                  <div className="flex items-start gap-3.5">
+                    <span className="emp-avatar grid h-11 w-11 shrink-0 place-items-center rounded-[0.8rem]">
+                      <FieldIcon id="clipboard" size={20} />
+                    </span>
+                    <div>
+                      <div className="eyebrow">Review</div>
+                      <h2 className="display mt-2 text-[22px] text-[color:var(--color-ink)]">Review &amp; Save</h2>
+                      <p className="mt-1.5 text-[13px] text-[color:var(--color-ink-3)]">Confirm the details, then save the record.</p>
+                    </div>
                   </div>
                   <span className="mono text-[11px] tracking-[0.18em] text-[color:var(--color-ink-4)]">04</span>
                 </header>
@@ -867,12 +831,14 @@ function Section({
   eyebrow,
   title,
   subtitle,
+  icon,
   children,
 }: {
   idx: string;
   eyebrow: string;
   title: string;
   subtitle?: string;
+  icon?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -883,10 +849,17 @@ function Section({
       className="surface rounded-[3px] p-7 lg:p-9"
     >
       <header className="mb-7 flex items-start justify-between gap-3 border-b border-[color:var(--color-rule-soft)] pb-5">
-        <div>
-          <div className="eyebrow">{eyebrow}</div>
-          <h2 className="display mt-2 text-[22px] text-[color:var(--color-ink)]">{title}</h2>
-          {subtitle && <p className="mt-1.5 text-[13px] text-[color:var(--color-ink-3)]">{subtitle}</p>}
+        <div className="flex items-start gap-3.5">
+          {icon && (
+            <span className="emp-avatar grid h-11 w-11 shrink-0 place-items-center rounded-[0.8rem]">
+              <FieldIcon id={icon} size={20} />
+            </span>
+          )}
+          <div>
+            <div className="eyebrow">{eyebrow}</div>
+            <h2 className="display mt-2 text-[22px] text-[color:var(--color-ink)]">{title}</h2>
+            {subtitle && <p className="mt-1.5 text-[13px] text-[color:var(--color-ink-3)]">{subtitle}</p>}
+          </div>
         </div>
         <span className="mono text-[11px] tracking-[0.18em] text-[color:var(--color-ink-4)]">{idx}</span>
       </header>
@@ -895,14 +868,60 @@ function Section({
   );
 }
 
+/** A small stroked glyph that leads a field label or badges a section header,
+ *  so every input and section reads at a glance. */
+function FieldIcon({ id, size = 14 }: { id: string; size?: number }) {
+  const p = {
+    width: size,
+    height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.7,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    className: 'shrink-0',
+  };
+  switch (id) {
+    case 'user':
+      return (<svg {...p}><circle cx="12" cy="8" r="3.5" /><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" /></svg>);
+    case 'id':
+      return (<svg {...p}><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="8.5" cy="11" r="2" /><path d="M5.5 16c.4-1.4 1.6-2.2 3-2.2s2.6.8 3 2.2M14 9.5h4M14 13h4" /></svg>);
+    case 'mail':
+      return (<svg {...p}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>);
+    case 'phone':
+      return (<svg {...p}><path d="M15.5 13.4l-2 .8a9 9 0 0 1-4.7-4.7l.8-2L8 4H5a1 1 0 0 0-1 1 15 15 0 0 0 15 15 1 1 0 0 0 1-1v-3z" /></svg>);
+    case 'tag':
+      return (<svg {...p}><path d="M3 12l8.5-8.5H20V12l-8.5 8.5z" /><circle cx="15.5" cy="8.5" r="1.3" /></svg>);
+    case 'briefcase':
+      return (<svg {...p}><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18" /></svg>);
+    case 'award':
+      return (<svg {...p}><circle cx="12" cy="9" r="6" /><path d="M9 13.4 7.4 22l4.6-2.7 4.6 2.7L15 13.4" /></svg>);
+    case 'calendar':
+      return (<svg {...p}><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 9h18M8 3v4M16 3v4" /></svg>);
+    case 'file':
+      return (<svg {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>);
+    case 'doc':
+      return (<svg {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M8 13h8M8 17h5" /></svg>);
+    case 'shield':
+      return (<svg {...p}><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" /><path d="M9 12l2 2 4-4" /></svg>);
+    case 'clipboard':
+      return (<svg {...p}><rect x="6" y="4" width="12" height="17" rx="2" /><path d="M9 4h6v2H9z" /><path d="M9 13l2 2 4-4" /></svg>);
+    default:
+      return null;
+  }
+}
+
 function Field({
   label,
+  icon,
   required = false,
   error,
   valid = false,
   children,
 }: {
   label: string;
+  icon?: string;
   required?: boolean;
   error?: string | undefined;
   /** Shows a small copper check next to the label once the value passes. */
@@ -912,6 +931,7 @@ function Field({
   return (
     <label className="block">
       <span className="mb-2 flex items-center text-[12.5px] font-medium text-[color:var(--color-ink)]">
+        {icon && <span className="mr-1.5 inline-flex text-[color:var(--color-ink-3)]"><FieldIcon id={icon} /></span>}
         {label}
         {required && <span className="ml-0.5 text-[color:var(--color-sgs)]">*</span>}
         {valid && !error && (

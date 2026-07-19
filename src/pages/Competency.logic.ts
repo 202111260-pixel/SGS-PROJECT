@@ -76,9 +76,12 @@ export function experienceLevel(years: number): Grade {
 
 export const gi = (g: Grade): number => GRADE_ORDER.indexOf(g);
 
-export function computeGrade(training: Grade | null, experience: Grade, start: Grade): Grade | null {
+/** Grade is certificate-driven: it rises with the training tiers held, floored
+ *  at the role's entry grade. Time in position is tracked for context elsewhere
+ *  but no longer caps the grade. */
+export function computeGrade(training: Grade | null, start: Grade): Grade | null {
   if (training === null) return null;
-  const floor = Math.max(Math.min(gi(training), gi(experience)), gi(start));
+  const floor = Math.max(gi(training), gi(start));
   return GRADE_ORDER[floor] ?? null;
 }
 
@@ -98,12 +101,10 @@ export function plainViews(
 export function gradeFromCerts(
   emp: Employee,
   certs: Partial<Record<TrainingCode, CertRecord>>,
-  years: number,
   now: Date,
 ): Grade | null {
   return computeGrade(
     trainingLevel(plainViews(emp.position, certs, now)),
-    experienceLevel(years),
     START_GRADE[emp.position],
   );
 }

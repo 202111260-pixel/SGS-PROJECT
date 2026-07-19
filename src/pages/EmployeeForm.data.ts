@@ -124,7 +124,7 @@ export const REQUIRED_KEYS = ['fullName', 'employeeNo', 'email', 'position', 'pr
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /* ── shared class fragments ─────────────────────────────────────────── */
-
+  
 export const inputBase =
   'w-full rounded-[0.85rem] border bg-[color:var(--color-paper)] px-4 py-3 text-[14px] ' +
   'text-[color:var(--color-ink)] placeholder:text-[color:var(--color-ink-4)] transition-all ' +
@@ -134,7 +134,7 @@ export const inputBad = 'border-[oklch(0.6_0.18_28)]';
 
 export const RAIL_ITEMS: RailItem[] = [
   { id: 'home', label: 'Dashboard', to: '/dashboard' },
-  { id: 'people', label: 'Employees', to: '/employees/new', active: true },
+  { id: 'people', label: 'Employees', to: '/employees', active: true },
   { id: 'book', label: 'Training & Competency', to: '/training' },
   { id: 'shield', label: 'Compliance' },
   { id: 'chart', label: 'Analytics', to: '/dashboard/analytics' },

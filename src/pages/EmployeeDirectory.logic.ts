@@ -4,7 +4,8 @@
 // directory and profile always agree with the Competency page, byte-for-byte.
 
 import type { CertStatus, CertView, Employee, Grade } from './Competency.types';
-import { gradeFromCerts, plainViews, yearsSince } from './Competency.logic';
+import { daysUntil, gradeFromCerts, isHeld, plainViews, yearsSince } from './Competency.logic';
+import { URGENT_DAYS } from './Competency.data';
 
 /** A single at-a-glance verdict for the "Documents" column / profile badge. */
 export type DocStatus = 'complete' | 'expiring' | 'expired' | 'incomplete';
@@ -18,6 +19,12 @@ export type Compliance = {
   required: number;
   docStatus: DocStatus;
   years: number;
+  /** Days until the soonest-expiring in-date certificate, or null if none are
+   *  in date. Negative is impossible here — expired certs are not "in date". */
+  soonestDays: number | null;
+  /** An in-date certificate lapses within URGENT_DAYS — the "expiring within
+   *  two weeks" segment. */
+  urgent: boolean;
 };
 
 /**
@@ -33,7 +40,7 @@ export function complianceOf(emp: Employee, now: Date): Compliance {
   const held = counts.valid + counts.expiring;
   const required = views.length;
   const years = yearsSince(emp.hired, now);
-  const grade = gradeFromCerts(emp, emp.certs, years, now);
+  const grade = gradeFromCerts(emp, emp.certs, now);
 
   const docStatus: DocStatus =
     counts.expired > 0
@@ -44,7 +51,18 @@ export function complianceOf(emp: Employee, now: Date): Compliance {
           ? 'expiring'
           : 'complete';
 
-  return { grade, views, counts, held, required, docStatus, years };
+  // Soonest lapse among certificates still in date (valid + expiring). Expired
+  // ones are excluded — they are already surfaced by docStatus.
+  let soonestDays: number | null = null;
+  for (const v of views) {
+    if (v.rec !== null && isHeld(v.status)) {
+      const d = daysUntil(v.rec.expiry, now);
+      if (soonestDays === null || d < soonestDays) soonestDays = d;
+    }
+  }
+  const urgent = soonestDays !== null && soonestDays <= URGENT_DAYS;
+
+  return { grade, views, counts, held, required, docStatus, years, soonestDays, urgent };
 }
 
 export const DOC_STATUS_LABEL: Record<DocStatus, string> = {

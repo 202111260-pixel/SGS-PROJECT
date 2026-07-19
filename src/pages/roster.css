@@ -1,0 +1,1122 @@
+/*
+  Duty roster — scoped to `.dir-page .rst`. Same charter as the profile:
+  everything unwrapped on the page ground, no white cards, no separator
+  rules — the sheet's grid separates by air (border-spacing), each cell is
+  a stamped chip in its family hue. Hues mix with the ink/paper tokens so
+  light and dark themes both read (the code letter, never color alone,
+  carries the meaning).
+*/
+
+.dir-page .rst {
+  user-select: none;
+}
+
+/* ── family hues: --sf is the base, text mixes toward ink, fill toward paper ── */
+.dir-page .rst .is-duty      { --sf: oklch(0.53 0.1 162); --sf-text: oklch(0.985 0.008 85); }
+.dir-page .rst .is-rest      { --sf: oklch(0.55 0.02 70);  --sf-text: oklch(0.985 0.008 85); }
+.dir-page .rst .is-planned   { --sf: oklch(0.72 0.12 82);  --sf-text: oklch(0.28 0.05 70); }
+.dir-page .rst .is-unplanned { --sf: oklch(0.55 0.16 28);  --sf-text: oklch(0.985 0.008 85); }
+.dir-page .rst .is-special   { --sf: oklch(0.46 0.055 45); --sf-text: oklch(0.985 0.008 85); }
+.dir-page .rst .is-extra     { --sf: oklch(0.31 0.03 55);  --sf-text: oklch(0.985 0.008 85); }
+
+/* ── masthead controls ── */
+.dir-page .rst-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.dir-page .rst-month {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.dir-page .rst-step {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  color: var(--color-ink-3);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.dir-page .rst-step:hover {
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+}
+.dir-page .rst-month-label {
+  min-width: 128px;
+  text-align: center;
+  font-size: 17px;
+  color: var(--color-ink);
+}
+.dir-page .rst-project select {
+  appearance: none;
+  border: 1px solid var(--color-rule-soft);
+  border-radius: 999px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 13.5px;
+  padding: 7px 30px 7px 14px;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 16px top 55%, right 12px top 55%;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+  transition: border-color 0.2s ease;
+}
+.dir-page .rst-project select:hover {
+  border-color: var(--color-ink);
+}
+.dir-page .rst-state {
+  min-width: 96px;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: oklch(0.53 0.09 160);
+}
+.dir-page .rst-state.is-dirty {
+  color: oklch(0.55 0.11 70);
+}
+
+/* ── the Sheet | Teams switch ── */
+.dir-page .rst-view {
+  display: inline-flex;
+}
+.dir-page .rst-view button {
+  padding: 9px 20px;
+  border: 1px solid var(--color-rule-soft);
+  background: var(--color-paper);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink-3);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.dir-page .rst-view button:first-child {
+  border-radius: 999px 0 0 999px;
+  border-right: 0;
+}
+.dir-page .rst-view button:last-child {
+  border-radius: 0 999px 999px 0;
+}
+.dir-page .rst-view button.is-on {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+}
+
+/* ── the team builder: supervisors left, their crew hand-picked right ── */
+.dir-page .rst-teams {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 28px 60px;
+  margin-top: 26px;
+}
+.dir-page .rst-tb-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.dir-page .rst-tb-h {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .rst-tb-new {
+  padding-bottom: 14px;
+}
+.dir-page .rst-tb-new ul {
+  margin-top: 8px;
+}
+.dir-page .rst-tb-new li,
+.dir-page .rst-tb-people li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 6px;
+  border-radius: 13px;
+  transition: background-color 0.15s ease;
+}
+.dir-page .rst-tb-people li:hover {
+  background: color-mix(in oklab, var(--color-sgs) 5%, transparent);
+}
+.dir-page .rst-tb-ava {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid var(--color-rule-soft);
+}
+.dir-page .rst-tb-pname {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dir-page .rst-tb-psub {
+  display: block;
+  margin-top: 2px;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dir-page .rst-tb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dir-page .rst-tb-team {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.dir-page .rst-tb-team:hover {
+  background: color-mix(in oklab, var(--color-sgs) 5%, transparent);
+}
+.dir-page .rst-tb-team.is-on {
+  background: color-mix(in oklab, var(--color-sgs) 10%, transparent);
+}
+.dir-page .rst-tb-name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+.dir-page .rst-tb-addlink {
+  display: inline-block;
+  margin-top: 16px;
+  text-align: center;
+}
+.dir-page .rst-tb-head h2 {
+  font-size: 24px;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+.dir-page .rst-tb-head .mono {
+  margin-top: 5px;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .rst-tb-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px 56px;
+  margin-top: 22px;
+}
+.dir-page .rst-tb-colh {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+  margin-bottom: 10px;
+}
+.dir-page .rst-tb-cols .rst-search {
+  margin-bottom: 8px;
+}
+.dir-page .rst-tb-move {
+  flex-shrink: 0;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--color-rule-soft);
+  background: var(--color-paper);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+.dir-page .rst-tb-move:hover {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+}
+.dir-page .rst-tb-move.is-add:hover {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+}
+.dir-page .rst-tb-none {
+  padding: 14px 4px;
+  font-size: 13.5px;
+  color: var(--color-ink-3);
+}
+@media (max-width: 900px) {
+  .dir-page .rst-teams {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── the supervisor's mark and the follow-the-leader controls ── */
+.dir-page .rst-supchip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-style: normal;
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}
+.dir-page .rst-sync {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-rule-soft);
+  background: var(--color-paper);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.dir-page .rst-sync:hover:not(:disabled) {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+}
+.dir-page .rst-sync:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.dir-page .rst-tb-suphead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+}
+.dir-page .rst-tb-supava {
+  flex-shrink: 0;
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid var(--color-ink);
+}
+.dir-page .rst-tb-supava--org {
+  display: grid;
+  place-items: center;
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule-soft);
+  font-size: 21px;
+  color: var(--color-ink-2);
+}
+.dir-page .rst-tb-suphead h2 {
+  font-size: 24px;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+.dir-page .rst-tb-suphead .mono {
+  margin-top: 5px;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .rst-tb-supctl {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.dir-page .rst-shift {
+  display: inline-flex;
+}
+.dir-page .rst-shift button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-rule-soft);
+  background: var(--color-paper);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-ink-3);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.dir-page .rst-shift button:first-child {
+  border-radius: 999px 0 0 999px;
+  border-right: 0;
+}
+.dir-page .rst-shift button:last-child {
+  border-radius: 0 999px 999px 0;
+}
+.dir-page .rst-shift button.is-on {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+}
+.dir-page .rst-tb-note {
+  font-size: 7.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+/* the schedule composer toolbar */
+.dir-page .rst-composer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  margin-top: 20px;
+}
+.dir-page .rst-comp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.dir-page .rst-comp-field > .mono {
+  font-size: 7.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+.dir-page .rst-hpd {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0 4px;
+}
+.dir-page .rst-hpd b {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: var(--color-ink);
+}
+.dir-page .rst-hpd .mono {
+  font-size: 7.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+.dir-page .rst-sync--strong {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+}
+.dir-page .rst-sync--strong:hover:not(:disabled) {
+  background: var(--color-sgs);
+  border-color: var(--color-sgs);
+}
+/* the supervisor's own month, editable in place */
+.dir-page .rst-supcal {
+  margin-top: 24px;
+  max-width: 760px;
+}
+.dir-page .rst-supcal-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.dir-page .rst-supcal-cur {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+.dir-page .rst-supcal .rst-chips {
+  margin: 4px 0 14px;
+}
+.dir-page .rst-chips--mini .rst-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 7px 11px;
+}
+.dir-page .rst-chips--mini .rst-chip small {
+  font-family: var(--font-sans);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+@media (max-width: 700px) {
+  .dir-page .rst-tb-supctl {
+    align-items: flex-start;
+    width: 100%;
+  }
+}
+
+/* ── the month in numbers — management's glance ── */
+.dir-page .rst-nums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 52px;
+  margin-top: 26px;
+}
+.dir-page .rst-nums > span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dir-page .rst-nums b {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--color-ink);
+}
+.dir-page .rst-nums .mono {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+
+/* ── the day lens: one day, mustered with faces ── */
+.dir-page .rst-lens {
+  margin-top: 22px;
+}
+.dir-page .rst-lens-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+}
+.dir-page .rst-lens-head b {
+  font-size: 23px;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+.dir-page .rst-lens-head .mono {
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .rst-lens-x {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  border-radius: 999px;
+  color: var(--color-ink-3);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.dir-page .rst-lens-x:hover {
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+}
+.dir-page .rst-lens-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 18px 44px;
+  margin-top: 14px;
+}
+.dir-page .rst-lens-groups ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.dir-page .rst-p {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 11px 4px 4px;
+  border-radius: 999px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule-soft);
+}
+.dir-page .rst-p img {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+.dir-page .rst-p span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+.dir-page .rst-p-code {
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-style: normal;
+  font-size: 8.5px;
+  font-weight: 700;
+  background: color-mix(in oklab, var(--sf) 16%, var(--color-paper));
+  color: color-mix(in oklab, var(--sf) 58%, var(--color-ink));
+}
+.dir-page .rst-lens-none {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+  padding: 4px 0;
+}
+
+/* ── exceptions mode: the routine fades, anomalies glow ── */
+.dir-page .rst-scroll.is-exc .rst-cell.is-duty,
+.dir-page .rst-scroll.is-exc .rst-cell.is-rest {
+  opacity: 0.13;
+}
+.dir-page .rst-scroll.is-exc .rst-cell.is-duty:hover,
+.dir-page .rst-scroll.is-exc .rst-cell.is-rest:hover {
+  opacity: 1;
+}
+
+/* ── the row mix bar: the month's shape at the row's end ── */
+.dir-page .rst-mix {
+  display: flex;
+  width: 76px;
+  height: 5px;
+  margin-bottom: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--color-paper-3);
+}
+.dir-page .rst-mix i {
+  height: 100%;
+}
+.dir-page .rst-mix .is-d {
+  background: oklch(0.53 0.1 162);
+}
+.dir-page .rst-mix .is-l {
+  background: oklch(0.72 0.12 82);
+}
+.dir-page .rst-mix .is-r {
+  background: oklch(0.75 0.015 70);
+}
+
+/* ── the smart filter bar ── */
+.dir-page .rst-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  margin-top: 20px;
+}
+.dir-page .rst-searchwrap {
+  position: relative;
+  flex: 1 1 230px;
+  max-width: 360px;
+  color: var(--color-ink-4);
+}
+.dir-page .rst-searchwrap svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  translate: 0 -50%;
+  pointer-events: none;
+}
+.dir-page .rst-search {
+  width: 100%;
+  border: 1px solid var(--color-rule-soft);
+  border-radius: 999px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 13.5px;
+  padding: 8px 16px 8px 34px;
+  transition: border-color 0.2s ease;
+}
+.dir-page .rst-search::placeholder {
+  color: var(--color-ink-4);
+}
+.dir-page .rst-search:focus-visible {
+  outline: none;
+  border-color: var(--color-ink);
+}
+.dir-page .rst-assignbtn {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-rule-soft);
+  background: var(--color-paper);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.dir-page .rst-assignbtn:hover {
+  border-color: var(--color-ink);
+}
+.dir-page .rst-assignbtn.is-on {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+}
+.dir-page .rst-count {
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+/* ── the code tray ── */
+.dir-page .rst-tray {
+  margin-top: 20px;
+}
+.dir-page .rst-tray-h {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .rst-tray-h b {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+.dir-page .rst-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+.dir-page .rst-chip {
+  min-width: 46px;
+  padding: 8px 12px;
+  border-radius: 11px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: color-mix(in oklab, var(--sf) 14%, var(--color-paper));
+  color: color-mix(in oklab, var(--sf) 60%, var(--color-ink));
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s var(--ease), box-shadow 0.18s ease;
+}
+.dir-page .rst-chip:hover {
+  background: color-mix(in oklab, var(--sf) 26%, var(--color-paper));
+}
+.dir-page .rst-chip.is-on {
+  background: var(--sf);
+  color: var(--sf-text);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px -10px color-mix(in oklab, var(--sf) 70%, transparent);
+}
+
+/* ── the sheet ── */
+.dir-page .rst-scroll {
+  margin-top: 18px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.dir-page .rst-table {
+  border-collapse: separate;
+  border-spacing: 3px;
+  min-width: 100%;
+}
+.dir-page .rst-table th {
+  font-weight: 500;
+}
+
+/* day headers — days you can actually read, and open like doors */
+.dir-page .rst-day {
+  padding: 0;
+  min-width: 38px;
+  text-align: center;
+  vertical-align: bottom;
+  border-radius: 9px;
+}
+.dir-page .rst-day-btn {
+  display: block;
+  width: 100%;
+  padding: 5px 1px 6px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.dir-page .rst-day-btn:hover {
+  background: var(--color-paper-3);
+}
+.dir-page .rst-day.is-lens .rst-day-btn {
+  box-shadow: inset 0 0 0 1.5px var(--color-ink);
+}
+/* the day's coverage pulse — deeper = more of the crew on duty */
+.dir-page .rst-day-cov {
+  display: block;
+  width: 68%;
+  height: 3.5px;
+  margin: 4px auto 0;
+  border-radius: 999px;
+  background: oklch(0.53 0.1 162);
+}
+.dir-page .rst-day.is-we {
+  background: var(--color-paper-3);
+}
+.dir-page .rst-day-dow {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--color-ink-3);
+}
+.dir-page .rst-day.is-we .rst-day-dow {
+  color: var(--color-ink-2);
+}
+.dir-page .rst-day-no {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+.dir-page .rst-day-no.is-today {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+/* today's column header — tinted so the eye lands on it first */
+.dir-page .rst-day.is-tdy {
+  background: color-mix(in oklab, var(--color-sgs) 10%, transparent);
+}
+.dir-page .rst-day.is-tdy .rst-day-dow {
+  color: var(--color-ink);
+  font-weight: 700;
+}
+.dir-page .rst-name-h,
+.dir-page .rst-sum-h {
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+  text-align: left;
+  vertical-align: bottom;
+  padding-bottom: 6px;
+}
+.dir-page .rst-sum-h {
+  padding-left: 10px;
+}
+
+/* sticky crew column */
+.dir-page .rst-name,
+.dir-page .rst-name-h,
+.dir-page .rst-cover-h {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--color-paper-2);
+  text-align: left;
+}
+.dir-page .rst-name {
+  min-width: 188px;
+  max-width: 230px;
+  padding: 4px 14px 4px 2px;
+}
+/* the supervisor's row leads their team — tinted sticky cell, bolder name */
+.dir-page .rst-name.is-sup {
+  background: color-mix(in oklab, var(--color-sgs) 9%, var(--color-paper-2));
+  border-radius: 10px;
+  padding-left: 8px;
+}
+.dir-page .rst-name.is-sup .rst-name-main {
+  font-weight: 700;
+}
+.dir-page .rst-name-main {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dir-page .rst-name-sub {
+  display: block;
+  margin-top: 1px;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+
+.dir-page .rst-none {
+  padding: 26px 4px;
+  font-size: 13px;
+  color: var(--color-ink-3);
+}
+
+/* the stamped cells */
+.dir-page .rst-cell {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 34px;
+  height: 33px;
+  border-radius: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: color-mix(in oklab, var(--sf) 15%, var(--color-paper));
+  color: color-mix(in oklab, var(--sf) 58%, var(--color-ink));
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.15s ease;
+}
+.dir-page .rst-cell:hover {
+  background: color-mix(in oklab, var(--sf) 30%, var(--color-paper));
+}
+.dir-page .rst-cell:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 1px;
+}
+/* today's column, traceable from header to footer */
+.dir-page .rst-cell.is-tdy {
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--color-ink) 50%, transparent);
+}
+.dir-page .rst-cover.is-tdy {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+/* per-row totals */
+.dir-page .rst-sum {
+  padding-left: 10px;
+  white-space: nowrap;
+}
+.dir-page .rst-sum .tabular {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.dir-page .rst-sum .mono {
+  display: block;
+  font-size: 7.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+}
+
+/* coverage foot */
+.dir-page .rst-cover-h {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+  padding-top: 8px;
+}
+.dir-page .rst-cover {
+  padding-top: 8px;
+  text-align: center;
+  font-size: 9.5px;
+  color: var(--color-ink-3);
+  border-radius: 8px;
+}
+.dir-page .rst-cover.is-we {
+  background: var(--color-paper-3);
+}
+
+/* ── legend ── */
+.dir-page .rst-legend {
+  margin-top: 26px;
+}
+.dir-page .rst-legend-h {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+.dir-page .rst-legend ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 26px;
+  margin-top: 12px;
+}
+.dir-page .rst-legend li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+}
+.dir-page .rst-key {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  background: color-mix(in oklab, var(--sf) 15%, var(--color-paper));
+  color: color-mix(in oklab, var(--sf) 58%, var(--color-ink));
+}
+
+/* ── the People roster: a clean professional table of everyone, filterable
+      by supervisor/team and role. Same charter — no cards, hairline rules
+      only, the row hover a soft brand tint. ── */
+.dir-page .rst-ppl {
+  margin-top: 24px;
+}
+.dir-page .rst-ppl .rst-filter {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+.dir-page .rst-ppl-scroll {
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.dir-page .rst-ppl-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+.dir-page .rst-ppl-table thead th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-4);
+  padding: 0 18px 11px 0;
+  border-bottom: 1px solid var(--color-rule-soft);
+  white-space: nowrap;
+}
+.dir-page .rst-ppl-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.dir-page .rst-ppl-table tbody tr:hover {
+  background: color-mix(in oklab, var(--color-sgs) 5%, transparent);
+}
+.dir-page .rst-ppl-table tbody td {
+  padding: 10px 18px 10px 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-rule-soft) 55%, transparent);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.dir-page .rst-ppl-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.dir-page .rst-ppl-table tbody td:first-child {
+  padding-left: 10px;
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+.dir-page .rst-ppl-table tbody td:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+.dir-page .rst-ppl-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.dir-page .rst-ppl-id img {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid var(--color-rule-soft);
+}
+.dir-page .rst-ppl-name {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--color-ink);
+  transition: color 0.15s ease;
+}
+.dir-page .rst-ppl-id:hover .rst-ppl-name {
+  color: var(--color-sgs);
+}
+.dir-page .rst-ppl-pos,
+.dir-page .rst-ppl-team {
+  font-size: 13px;
+  color: var(--color-ink-2);
+}
+.dir-page .rst-ppl-no {
+  font-size: 12px;
+  color: var(--color-ink-3);
+}
+.dir-page .rst-ppl-kind {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--color-rule-soft);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+.dir-page .rst-ppl-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-ink-2);
+}
+.dir-page .rst-ppl-stat i {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--sf);
+}
+.dir-page .rst-ppl-stat.is-none {
+  color: var(--color-ink-4);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dir-page .rst-chip,
+  .dir-page .rst-cell,
+  .dir-page .rst-step {
+    transition: none;
+  }
+}
