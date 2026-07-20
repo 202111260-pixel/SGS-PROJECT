@@ -1,4 +1,4 @@
-import type { CompanyPropertyKey, DocKey, DocState, FormState, Grade, Position, RailItem, SafetyKey } from './EmployeeForm.types';
+import type { CompanyPropertyKey, DocKey, DocState, FormState, Grade, OrgGroup, Position, RailItem, SafetyKey, Shift } from './EmployeeForm.types';
 
 export const POSITIONS: readonly Position[] = [
   'Assistant',
@@ -11,6 +11,27 @@ export const POSITIONS: readonly Position[] = [
   'HSE Advisor',
 ];
 export const PROJECTS = ['OQ', 'Oxy Oman'] as const;
+
+/** The field runs 8 operational units (per the site org sheet): each unit
+ *  fields a DAY crew and a NIGHT crew on 6–6 twelve-hour shifts, an
+ *  Operator leading two Assistants. Unit membership is OPTIONAL on the
+ *  employee record — base/support roles carry none. */
+export const UNITS: ReadonlyArray<string> = Array.from({ length: 8 }, (_, i) => `Unit ${i + 1}`);
+
+/** The base runs two 12-hour shifts on a 6–6 rotation (mirrors Team.logic's
+ *  SHIFT_WINDOW). OPTIONAL on the employee record — every role can carry one. */
+export const SHIFTS: ReadonlyArray<{ key: Shift; label: string; window: string; glyph: string }> = [
+  { key: 'day', label: 'Day', window: '06:00 – 18:00', glyph: '☀' },
+  { key: 'night', label: 'Night', window: '18:00 – 06:00', glyph: '☾' },
+];
+
+/** Site org grouping, independent of unit membership — the base's other two
+ *  arms alongside the field units. OPTIONAL on the employee record. */
+export const ORG_GROUPS: ReadonlyArray<{ value: OrgGroup; hint: string }> = [
+  { value: 'Field Operations', hint: 'Staffs one of the 8 operational units.' },
+  { value: 'Base', hint: 'Base team — run by the supervisors.' },
+  { value: 'Support', hint: 'Support pool — Tool Man · Mechanic · Welder.' },
+];
 
 /** Only these field-operations roles carry the C → B → A promotion ladder;
  *  every other position is recorded without a grade. */
@@ -71,6 +92,9 @@ export const blankForm = (): FormState => ({
   mobile: '',
   position: '',
   project: '',
+  unit: '',
+  shift: '',
+  orgGroup: '',
   grade: '',
   hireDate: '',
   experienceYears: '',
@@ -91,6 +115,9 @@ export const SAMPLE_EMPLOYEE: FormState = {
   mobile: '9123 4567',
   position: 'Operator',
   project: 'OQ',
+  unit: 'Unit 3',
+  shift: 'day',
+  orgGroup: 'Field Operations',
   grade: 'B',
   hireDate: '2022-01-24',
   experienceYears: '4.2',

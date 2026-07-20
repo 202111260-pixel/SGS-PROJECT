@@ -30,19 +30,22 @@ import {
   GRADE_LADDER,
   GRADE_TIER,
   OFFICIAL_DOCS,
+  ORG_GROUPS,
   POSITIONS,
   PROJECTS,
   RAIL_ITEMS,
   REQUIRED_KEYS,
   SAFETY_CERTS,
   SAMPLE_EMPLOYEE,
+  SHIFTS,
   TOTAL_DOCS,
+  UNITS,
   blankForm,
   inputBad,
   inputBase,
   inputOk,
 } from './EmployeeForm.data';
-import { calculateServiceYears, hasGradeLadder, initialsOf, validate } from './EmployeeForm.logic';
+import { calculateServiceYears, hasGradeLadder, initialsOf, isOrgGroup, validate } from './EmployeeForm.logic';
 /* ════════════════════════════════════════════════════════════════════ */
 
 export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }) {
@@ -105,6 +108,7 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
   const isReady = Object.keys(requiredComplete).length === 0;
   const receivedCompanyProps = COMPANY_PROPERTIES.filter((item) => form.companyProps[item.key]).map((item) => item.label);
   const calculatedExperienceYears = calculateServiceYears(form.hireDate);
+  const shiftMeta = SHIFTS.find((s) => s.key === form.shift);
 
   // Live completion for the preview card: 5 required basics + every document.
   const basicsDone = REQUIRED_KEYS.filter((k) => !requiredComplete[k]).length;
@@ -454,6 +458,72 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                     />
                   </Field>
 
+                  <Field label="Unit" icon="unit" valid={form.unit !== ''}>
+                    <Select
+                      value={form.unit}
+                      onChange={(v) => set('unit', v)}
+                      placeholder="No unit — optional"
+                      options={UNITS}
+                      allowEmpty
+                    />
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-[color:var(--color-ink-4)]">
+                      Optional · the field runs 8 units, each with a day &amp; night crew (6–6).
+                    </p>
+                  </Field>
+
+                  <Field label="Shift" icon="clock" valid={form.shift !== ''}>
+                    <div className="emp-fieldgroup flex rounded-[0.85rem] border p-1">
+                      {SHIFTS.map((s) => {
+                        const on = form.shift === s.key;
+                        return (
+                          <button
+                            key={s.key}
+                            type="button"
+                            aria-pressed={on}
+                            onClick={() => set('shift', on ? '' : s.key)}
+                            className="relative isolate flex h-[46px] flex-1 items-center justify-center gap-2 rounded-[0.65rem]"
+                          >
+                            {on && (
+                              <motion.span
+                                layoutId="shift-pill"
+                                className="emp-btn-primary absolute inset-0 -z-10 rounded-[0.65rem]"
+                                transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                              />
+                            )}
+                            <span aria-hidden className={`text-[15px] leading-none transition-colors ${on ? 'text-white' : 'text-[color:var(--color-ink-3)]'}`}>
+                              {s.glyph}
+                            </span>
+                            <span className="flex flex-col items-start leading-none">
+                              <span className={`text-[13px] font-semibold transition-colors ${on ? 'text-white' : 'text-[color:var(--color-ink)]'}`}>
+                                {s.label}
+                              </span>
+                              <span className={`mono text-[8.5px] tracking-[0.08em] transition-colors ${on ? 'text-white/85' : 'text-[color:var(--color-ink-4)]'}`}>
+                                {s.window}
+                              </span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-[color:var(--color-ink-4)]">
+                      Optional · a 12-hour shift on the site's 6–6 rotation. Click the active one to clear.
+                    </p>
+                  </Field>
+
+                  <Field label="Organizational Group" icon="group" valid={form.orgGroup !== ''}>
+                    <Select
+                      value={form.orgGroup}
+                      onChange={(v) => set('orgGroup', isOrgGroup(v) ? v : '')}
+                      placeholder="No group — optional"
+                      options={ORG_GROUPS.map((g) => g.value)}
+                      allowEmpty
+                    />
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-[color:var(--color-ink-4)]">
+                      {ORG_GROUPS.find((g) => g.value === form.orgGroup)?.hint ??
+                        'Optional · where the employee sits in the site org sheet, apart from the unit.'}
+                    </p>
+                  </Field>
+
                   {hasGradeLadder(form.position) && (
                     <Field label="Current Grade" icon="award" valid={form.grade !== ''}>
                       <div className="emp-fieldgroup flex rounded-[0.85rem] border p-1">
@@ -690,6 +760,9 @@ export default function EmployeeForm({ mode = 'new' }: { mode?: 'new' | 'edit' }
                   <SummaryRow k="Employee No." v={form.employeeNo || '—'} mono />
                   <SummaryRow k="Position" v={form.position || '—'} />
                   <SummaryRow k="Project" v={form.project || '—'} />
+                  <SummaryRow k="Unit" v={form.unit || '—'} />
+                  <SummaryRow k="Shift" v={shiftMeta ? `${shiftMeta.label} · ${shiftMeta.window}` : '—'} />
+                  <SummaryRow k="Group" v={form.orgGroup || '—'} />
                   <SummaryRow
                     k="Company properties"
                     v={receivedCompanyProps.length ? receivedCompanyProps.join(' · ') : 'None selected'}
@@ -895,6 +968,12 @@ function FieldIcon({ id, size = 14 }: { id: string; size?: number }) {
       return (<svg {...p}><path d="M3 12l8.5-8.5H20V12l-8.5 8.5z" /><circle cx="15.5" cy="8.5" r="1.3" /></svg>);
     case 'briefcase':
       return (<svg {...p}><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18" /></svg>);
+    case 'unit':
+      return (<svg {...p}><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg>);
+    case 'clock':
+      return (<svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7.5V12l3 2" /></svg>);
+    case 'group':
+      return (<svg {...p}><rect x="9" y="3" width="6" height="5" rx="1" /><rect x="3" y="16" width="6" height="5" rx="1" /><rect x="15" y="16" width="6" height="5" rx="1" /><path d="M12 8v3M6 16v-2h12v2" /></svg>);
     case 'award':
       return (<svg {...p}><circle cx="12" cy="9" r="6" /><path d="M9 13.4 7.4 22l4.6-2.7 4.6 2.7L15 13.4" /></svg>);
     case 'calendar':
@@ -959,12 +1038,15 @@ function Select({
   options,
   placeholder,
   invalid = false,
+  allowEmpty = false,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: ReadonlyArray<string>;
   placeholder: string;
   invalid?: boolean;
+  /** Optional fields: the placeholder stays selectable, so '' can be re-chosen. */
+  allowEmpty?: boolean;
 }) {
   return (
     <div className="relative">
@@ -976,7 +1058,7 @@ function Select({
           value ? 'text-[color:var(--color-ink)]' : 'text-[color:var(--color-ink-4)]'
         }`}
       >
-        <option value="" disabled>
+        <option value="" disabled={!allowEmpty}>
           {placeholder}
         </option>
         {options.map((o) => (
@@ -1259,6 +1341,7 @@ function PreviewCard({
     { label: 'Official documents', done: docsDone, total: OFFICIAL_DOCS.length },
     { label: 'Safety certificates', done: safetyDone, total: SAFETY_CERTS.length },
   ];
+  const shiftMeta = SHIFTS.find((s) => s.key === form.shift);
   return (
     <div className="surface overflow-hidden rounded-[3px]">
       {/* copper mesh band */}
@@ -1304,6 +1387,22 @@ function PreviewCard({
             </span>
           )}
         </p>
+
+        {(shiftMeta || form.orgGroup) && (
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {shiftMeta && (
+              <span className="mono inline-flex items-center gap-1 rounded-full border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper-2)]/60 px-2 py-0.5 text-[10px] text-[color:var(--color-ink-2)]">
+                <span aria-hidden>{shiftMeta.glyph}</span>
+                {shiftMeta.label} shift
+              </span>
+            )}
+            {form.orgGroup && (
+              <span className="mono inline-flex items-center rounded-full border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper-2)]/60 px-2 py-0.5 text-[10px] text-[color:var(--color-ink-2)]">
+                {form.orgGroup}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* completion ring */}
         <div className="mt-5 flex items-center gap-4 rounded-[1.1rem] border border-[color:var(--color-rule-soft)] bg-[color:var(--color-paper-2)]/60 p-4">

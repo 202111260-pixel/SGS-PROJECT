@@ -3,6 +3,7 @@ import {
   calculateCertificateExpiry,
   calculateCertificateRemainingDays,
   calculateServiceYears,
+  isOrgGroup,
 } from './EmployeeForm.logic';
 
 describe('calculateServiceYears', () => {
@@ -15,6 +16,20 @@ describe('calculateServiceYears', () => {
 
     expect(calculateServiceYears('2026-02-30', currentDate)).toBe('');
     expect(calculateServiceYears('2026-07-15', currentDate)).toBe('');
+  });
+});
+
+describe('isOrgGroup', () => {
+  it('accepts the three site org groups', () => {
+    expect(isOrgGroup('Field Operations')).toBe(true);
+    expect(isOrgGroup('Base')).toBe(true);
+    expect(isOrgGroup('Support')).toBe(true);
+  });
+
+  it('rejects the empty placeholder and any unknown value', () => {
+    expect(isOrgGroup('')).toBe(false);
+    expect(isOrgGroup('Field')).toBe(false);
+    expect(isOrgGroup('Admin')).toBe(false);
   });
 });
 

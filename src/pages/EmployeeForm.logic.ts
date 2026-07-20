@@ -1,11 +1,17 @@
-import type { Errors, FormState, Position } from './EmployeeForm.types';
-import { EMAIL_RE, GRADED_POSITIONS } from './EmployeeForm.data';
+import type { Errors, FormState, OrgGroup, Position } from './EmployeeForm.types';
+import { EMAIL_RE, GRADED_POSITIONS, ORG_GROUPS } from './EmployeeForm.data';
 
 const MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
 const CERT_VALIDITY_YEARS = 2;
 
 export function hasGradeLadder(p: Position | ''): boolean {
   return (GRADED_POSITIONS as readonly string[]).includes(p);
+}
+
+/** Narrows a raw <select> value to a known org group, so the empty
+ *  placeholder and any stray value resolve to '' instead of being cast in. */
+export function isOrgGroup(v: string): v is OrgGroup {
+  return ORG_GROUPS.some((g) => g.value === v);
 }
 
 function parseIsoDate(date: string): Date | null {
