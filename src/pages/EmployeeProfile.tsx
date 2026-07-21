@@ -349,7 +349,6 @@ export default function EmployeeProfile() {
                 <Kv icon="layers" k="Project" v={emp.project} />
                 <Kv icon="shield" k="Status" v="Active" />
                 <Kv icon="user" k="Line manager" v={hr?.manager ?? '—'} />
-                <Kv icon="cv" k="Contract" v={hr?.contract ?? '—'} />
                 <Kv icon="globe" k="Nationality" v={hr?.nationality ?? '—'} />
                 <Kv icon="pin" k="Base" v={hr?.base ?? '—'} />
                 <Kv icon="clock" k="Hired" v={fmtDate(emp.hired)} />

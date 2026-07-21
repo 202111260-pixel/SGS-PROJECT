@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { EmployeeShell } from './EmployeeChrome';
@@ -32,7 +32,7 @@ import {
   spanLabel,
   spanMinutes,
 } from './Team.logic';
-import type { DayHours, HoursMap, ShiftKind, ShiftMap } from './Team.logic';
+import type { AssignMap, DayHours, HoursMap, ShiftKind, ShiftMap } from './Team.logic';
 import './roster.css';
 import './team.css';
 
@@ -57,13 +57,44 @@ import './team.css';
  * persistence is localStorage parsed through Zod schemas (charter §2).
  */
 
-const SUPERVISOR = 'Salim Al-Rashdi';
-const CREW_KEY = 'sgs-crew-v1:salim-al-rashdi';
 /** Demo role — production reads the signed-in user's role from Supabase
  *  Auth and RLS enforces it; this flag only shapes the demo UI. */
 const ROLE: 'supervisor' | 'viewer' = 'supervisor';
 
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+
+/** The effective manager of an employee: management's assignment (set on the
+ *  duty roster) wins over HR's recorded line manager. */
+function effectiveManager(empId: string, assigned: AssignMap): string | undefined {
+  return assigned[empId] ?? hrOf(empId)?.manager ?? undefined;
+}
+
+/** Anyone with people under them — a field supervisor or a management unit
+ *  (Country Operations / HSE) alike. `person` is their own roster record when
+ *  the manager is themselves an employee, so the picker can show a face;
+ *  management units have no such record. */
+type Supervisor = { name: string; reports: number; person: Employee | undefined };
+
+/** Everyone who manages at least one person, most reports first — exactly as
+ *  the org records them, field supervisors and management units together. */
+function buildSupervisors(assigned: AssignMap): Supervisor[] {
+  const counts = new Map<string, number>();
+  for (const e of EMPLOYEES) {
+    const mgr = effectiveManager(e.id, assigned);
+    if (mgr) counts.set(mgr, (counts.get(mgr) ?? 0) + 1);
+  }
+  const byName = new Map(EMPLOYEES.map((e) => [e.name, e] as const));
+  return [...counts.entries()]
+    .map(([name, reports]) => ({ name, reports, person: byName.get(name) }))
+    .sort((a, b) => b.reports - a.reports || a.name.localeCompare(b.name));
+}
+
+/** Per-supervisor crew store key — each supervisor keeps their own sheet.
+ *  ('Salim Al-Rashdi' → 'sgs-crew-v1:salim-al-rashdi', the original key.) */
+function crewKeyOf(name: string): string {
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return `sgs-crew-v1:${slug}`;
+}
 
 type Ym = { year: number; month: number };
 
@@ -101,22 +132,81 @@ function factsOf(emp: Employee, now: Date): MemberFacts {
   };
 }
 
+/**
+ * The outer page: pick a supervisor (or management unit) from the org, then
+ * the whole sheet below is that supervisor and their team. Changing the pick
+ * remounts the sheet with fresh, per-supervisor state (React `key`), so the
+ * crew, selection and open month can never leak between supervisors.
+ */
 export default function Team() {
   const { id } = useParams();
   const [now] = useState(() => new Date());
+
+  const assigned = useMemo<AssignMap>(
+    () => parseStoredAssignments(localStorage.getItem(ASSIGN_KEY)) ?? {},
+    [],
+  );
+  const supervisors = useMemo(() => buildSupervisors(assigned), [assigned]);
+
+  /** Open on the supervisor a deep link points at (their manager), else the
+   *  demo persona, else whoever tops the list. */
+  const [supervisor, setSupervisor] = useState<string>(() => {
+    const linked = id ? EMPLOYEES.find((e) => e.id === id || empNo(e.id) === id) : undefined;
+    const fromLink = linked ? effectiveManager(linked.id, assigned) : undefined;
+    if (fromLink && supervisors.some((s) => s.name === fromLink)) return fromLink;
+    if (supervisors.some((s) => s.name === 'Salim Al-Rashdi')) return 'Salim Al-Rashdi';
+    return supervisors[0]?.name ?? '';
+  });
+
+  return (
+    <EmployeeShell active="My team">
+      <SupervisorSheet
+        key={supervisor}
+        supervisor={supervisor}
+        supervisors={supervisors}
+        assigned={assigned}
+        now={now}
+        initialMemberId={id}
+        onPickSupervisor={setSupervisor}
+      />
+    </EmployeeShell>
+  );
+}
+
+/**
+ * The sheet for one supervisor: their team on the left, the selected member's
+ * month on the right. Remounted per supervisor (via `key`), so all of its
+ * state is naturally scoped to the chosen supervisor.
+ */
+function SupervisorSheet({
+  supervisor,
+  supervisors,
+  assigned,
+  now,
+  initialMemberId,
+  onPickSupervisor,
+}: {
+  supervisor: string;
+  supervisors: Supervisor[];
+  assigned: AssignMap;
+  now: Date;
+  initialMemberId: string | undefined;
+  onPickSupervisor: (name: string) => void;
+}) {
   const [ym, setYm] = useState<Ym>({ year: now.getFullYear(), month: now.getMonth() });
   const canEdit = ROLE === 'supervisor';
+  const crewKey = crewKeyOf(supervisor);
 
   /** Everyone this supervisor manages — management's assignments (set on
    *  the duty roster page) win over HR's original line manager. */
-  const supervisees = useMemo(() => {
-    const assigned = parseStoredAssignments(localStorage.getItem(ASSIGN_KEY)) ?? {};
-    return EMPLOYEES.filter((e) => (assigned[e.id] ?? hrOf(e.id)?.manager) === SUPERVISOR);
-  }, []);
+  const supervisees = useMemo(
+    () => EMPLOYEES.filter((e) => effectiveManager(e.id, assigned) === supervisor),
+    [assigned, supervisor],
+  );
   const byId = useMemo(() => new Map(supervisees.map((e) => [e.id, e])), [supervisees]);
 
   const [crewIds, setCrewIds] = useState<string[]>(() => {
-    const stored = parseStoredCrew(localStorage.getItem(CREW_KEY));
+    const stored = parseStoredCrew(localStorage.getItem(crewKey));
     const valid = stored?.filter((cid) => supervisees.some((e) => e.id === cid));
     return valid && valid.length > 0 ? valid : supervisees.map((e) => e.id);
   });
@@ -126,8 +216,8 @@ export default function Team() {
   );
 
   const [selectedId, setSelectedId] = useState<string | null>(() => {
-    if (id) {
-      const hit = supervisees.find((e) => e.id === id || empNo(e.id) === id);
+    if (initialMemberId) {
+      const hit = supervisees.find((e) => e.id === initialMemberId || empNo(e.id) === initialMemberId);
       if (hit) return hit.id;
     }
     return null;
@@ -239,7 +329,7 @@ export default function Team() {
     }
     localStorage.setItem(shiftStoreKey(ym.year, ym.month), JSON.stringify(shifts));
     localStorage.setItem(hoursStoreKey(ym.year, ym.month), JSON.stringify(hoursMap));
-    localStorage.setItem(CREW_KEY, JSON.stringify(crewIds));
+    localStorage.setItem(crewKey, JSON.stringify(crewIds));
     setDirty(false);
     setSavedAt(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' }).format(new Date()));
   }
@@ -265,8 +355,7 @@ export default function Team() {
   }
 
   return (
-    <EmployeeShell active="My team">
-      <div className="tm mx-auto max-w-[1280px]">
+    <div className="tm mx-auto max-w-[1280px]">
         {/* ── masthead: one title, one month, two actions ── */}
         <motion.div
           className="pf-sec-head pf-sec-head--split"
@@ -282,11 +371,14 @@ export default function Team() {
                 <path d="m15.5 9.5 2 2 4-4.5" />
               </svg>
             </span>
-            <div>
+            <div className="min-w-0">
               <h1 className="pf-sec-title display">Team timesheet</h1>
-              <p className="pf-sec-sub mono">
-                Supervisor · {SUPERVISOR} · {crew.length} on sheet · view open to everyone
-              </p>
+              <SupervisorPicker
+                value={supervisor}
+                options={supervisors}
+                crewCount={crew.length}
+                onChange={onPickSupervisor}
+              />
             </div>
           </div>
           <div className="tm-controls">
@@ -497,8 +589,157 @@ export default function Team() {
           roster share the same record — management sees the full picture · edits are supervisor-only, enforced in
           RLS in production
         </p>
-      </div>
-    </EmployeeShell>
+    </div>
+  );
+}
+
+/* ── the supervisor picker: choose whose team this sheet shows ── */
+
+function SupervisorPicker({
+  value,
+  options,
+  crewCount,
+  onChange,
+}: {
+  value: string;
+  options: Supervisor[];
+  crewCount: number;
+  onChange: (name: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const current = options.find((s) => s.name === value);
+
+  // Dismiss on an outside click or Escape — a light dropdown, no modal trap.
+  useEffect(() => {
+    if (!open) return;
+    function onDown(ev: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(ev.target as Node)) setOpen(false);
+    }
+    function onKey(ev: KeyboardEvent) {
+      if (ev.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className="tm-sup" ref={wrapRef}>
+      <button
+        type="button"
+        className={`tm-sup-btn ${open ? 'is-open' : ''}`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <SupervisorFace sup={current} />
+        <span className="tm-sup-id">
+          <span className="tm-sup-cap mono">Supervisor</span>
+          <span className="tm-sup-name">{value || 'Unassigned'}</span>
+        </span>
+        <span className="tm-sup-count mono tabular">
+          {crewCount} on sheet
+        </span>
+        <svg
+          className="tm-sup-caret"
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.ul
+            className="tm-sup-menu"
+            role="listbox"
+            aria-label="Choose a supervisor"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.16, ease: EASE }}
+          >
+            {options.map((s) => {
+              const on = s.name === value;
+              return (
+                <li key={s.name}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={on}
+                    className={`tm-sup-opt ${on ? 'is-on' : ''}`}
+                    onClick={() => {
+                      onChange(s.name);
+                      setOpen(false);
+                    }}
+                  >
+                    <SupervisorFace sup={s} />
+                    <span className="min-w-0 flex-1 text-left">
+                      <span className="tm-sup-opt-name">{s.name}</span>
+                      <span className="tm-sup-opt-sub mono">
+                        {s.person ? POSITION_TAG[s.person.position] ?? s.person.position : 'Management'} ·{' '}
+                        {s.reports} report{s.reports === 1 ? '' : 's'}
+                      </span>
+                    </span>
+                    {on && (
+                      <svg
+                        className="tm-sup-tick"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                      >
+                        <path d="M4 12.5l5 5L20 6.5" />
+                      </svg>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+            {options.length === 0 && <li className="tm-sup-empty mono">No supervisors on record.</li>}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/** A supervisor's face: their portrait when they're on the roster, a building
+ *  glyph when the manager is a management unit (Country Operations / HSE). */
+function SupervisorFace({ sup }: { sup: Supervisor | undefined }) {
+  if (sup?.person) {
+    return (
+      <span className="tm-sup-ava" aria-hidden>
+        <img src={photoOf(sup.person.name)} alt="" loading="lazy" />
+      </span>
+    );
+  }
+  return (
+    <span className="tm-sup-ava tm-sup-ava--unit" aria-hidden>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 21V7l6-3v17" />
+        <path d="M9 21V10l6 3v8" />
+        <path d="M15 21V13l6 4v4" />
+        <path d="M2 21h20" />
+      </svg>
+    </span>
   );
 }
 
